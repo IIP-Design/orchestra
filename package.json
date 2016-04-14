@@ -1,0 +1,30 @@
+{
+  "name": "orchestra",
+  "version": "1.0.0",
+  "description": "The orchestration layer for the America.gov API.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha tests",
+    "watch": "nodemon -e js -x npm run test",
+    "knex": "knex"
+  },
+  "author": "Office of Design, U.S. Department of State",
+  "license": "MIT",
+  "dependencies": {
+    "bookshelf": "^0.9.2",
+    "knex": "^0.10.0",
+    "mysql": "^2.10.2",
+    "valid-url": "^1.0.9",
+    "wordpress": "git@github.com:NathanKleekamp/node-wordpress.git#rejectUnauthorized_ssl_setting"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-as-promised": "^5.3.0",
+    "eslint": "^2.7.0",
+    "eslint-config-airbnb": "^7.0.0",
+    "knex-csv-seeder": "^0.3.4",
+    "mocha": "^2.4.5",
+    "nodemon": "^1.9.1",
+    "underscore": "^1.8.3"
+  }
+}
