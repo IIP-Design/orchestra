@@ -1,0 +1,7 @@
+# Temporary
+lib/database/seeds/language.js
+
+
+node_modules
+config.js
+*.log
