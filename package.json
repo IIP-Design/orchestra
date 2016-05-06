@@ -4,9 +4,11 @@
   "description": "The orchestration layer for the America.gov API.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha tests",
+    "test": "mocha",
     "watch": "nodemon -e js -x npm run test",
-    "knex": "knex"
+    "knex:dev": "knex --knexfile 'lib/database/knexfile.js'",
+    "knex:test": "knex --knexfile 'lib/database/knexfile.js' --env 'test'",
+    "knex:prod": "knex --knexfile 'lib/database/knexfile.js' --env 'production'"
   },
   "author": "Office of Design, U.S. Department of State",
   "license": "MIT",
