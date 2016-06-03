@@ -4,7 +4,7 @@
   "description": "The orchestration layer for the America.gov API.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
+    "test": "mocha --timeout 15000",
     "watch": "nodemon -e js -x npm run test",
     "knex:dev": "knex --knexfile 'lib/database/knexfile.js'",
     "knex:test": "knex --knexfile 'lib/database/knexfile.js' --env 'test'",
@@ -22,8 +22,11 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
-    "eslint": "^2.7.0",
-    "eslint-config-airbnb": "^7.0.0",
+    "eslint": "^2.10.2",
+    "eslint-config-airbnb": "^9.0.1",
+    "eslint-plugin-import": "^1.8.1",
+    "eslint-plugin-jsx-a11y": "^1.2.2",
+    "eslint-plugin-react": "^5.1.1",
     "knex-csv-seeder": "^0.3.4",
     "mocha": "^2.4.5",
     "nodemon": "^1.9.1",

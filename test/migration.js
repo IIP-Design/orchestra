@@ -8,42 +8,28 @@ const expect = chai.expect;
 
 
 // Global before block to make sure we're starting with a totally clean DB
-before(function(done) {
-  return knex.migrate.rollback(config)
-  .then(function() {
-    console.log('global before block finished');
-    done();
-  });
-});
+before((done) => knex.migrate.rollback(config)
+  .then(() => done())
+);
 
 
-describe('Make sure `website` table exists with proper schema', function() {
-
-  // Store times as JSON string
+describe('Make sure `website` table exists with proper schema', () => {
+  // Store times as JSON string for easier manipulation in JS
   const now = (new Date()).toJSON();
   const site = {
     name: 'share',
     url: 'share.america.gov',
-    date_checked: now
-  }
+    date_checked: now,
+  };
 
   // Runs all migrations upto the most current
-  beforeEach(function(done) {
-    return knex.migrate.latest(config)
-    .then(function() {
-      return knex('website').insert(site);
-    })
-    .then(function() {
-      console.log('beforeEach block finished');
-      done();
-    });
-  });
+  beforeEach((done) => knex.migrate.latest(config)
+    .then(() => knex('website').insert(site))
+    .then(() => done())
+  );
 
   it('should return the website name', () => {
-    return knex('website').where(site).select('url')
-    .then(function(result) {
-      // result = [ { url: 'share.america.gov' } ];
-      expect(result[0].url).to.equal('share.america.gov');
-    });
+    const result = knex('website').where(site).select('url');
+    return expect(result).to.eventually.eql([{ url: 'share.america.gov' }]);
   });
 });
