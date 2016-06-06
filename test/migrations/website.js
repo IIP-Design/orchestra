@@ -1,16 +1,7 @@
-const config = require('../config').database.test;
-const knex = require('knex')(config);
-const chai = require('chai');
-const cap = require('chai-as-promised');
-
-chai.use(cap);
-const expect = chai.expect;
-
-
-// Global before block to make sure we're starting with a totally clean DB
-before((done) => knex.migrate.rollback(config)
-  .then(() => done())
-);
+const common = require('../common');
+const knex = common.knex;
+const expect = common.expect;
+const config = common.config;
 
 
 describe('Make sure `website` table exists with proper schema', () => {
@@ -26,6 +17,7 @@ describe('Make sure `website` table exists with proper schema', () => {
   beforeEach((done) => knex.migrate.latest(config)
     .then(() => knex('website').insert(site))
     .then(() => done())
+    .catch((e) => console.error(e))
   );
 
   it('should return the website name', () => {
