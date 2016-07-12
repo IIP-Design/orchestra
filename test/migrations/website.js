@@ -34,6 +34,14 @@ describe('Make sure `website` table exists with proper schema', () => {
     date_checked: now,
   };
 
+  it('should return the website name', () => {
+    return knex('website').insert(site)
+      .then(() => {
+        const result = knex('website').where(site).select('url');
+        return expect(result).to.eventually.eql([{ url: 'share.america.gov' }]);
+      });
+  });
+
   it('should fail if name is null', () => {
     return knex('website').insert(name_empty)
       .catch((err) => {
@@ -53,8 +61,8 @@ describe('Make sure `website` table exists with proper schema', () => {
   it('should fail if url is not unique', () => {
     return knex('website').insert(url_ununique)
       .catch((err) => {
-        expect(err.errno).to.equal(1169);
-        expect(err.code).to.equal('ER_DUP_UNIQUE');
+        expect(err.errno).to.equal(1062);
+        expect(err.code).to.equal('ER_DUP_ENTRY');
       });
   });
 
@@ -64,10 +72,5 @@ describe('Make sure `website` table exists with proper schema', () => {
         expect(err.errno).to.equal(1364);
         expect(err.code).to.equal('ER_NO_DEFAULT_FOR_FIELD');
       });
-  });
-
-  it('should return the website name', () => {
-    const result = knex('website').where(site).select('url');
-    return expect(result).to.eventually.eql([{ url: 'share.america.gov' }]);
   });
 })
