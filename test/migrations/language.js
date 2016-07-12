@@ -23,7 +23,7 @@ describe('Make sure `language` table exists with proper schema', () => {
     title: undefined
   };
 
-  it('should insert correctly and return the website name', () => {
+  it('should insert correctly and return the language title', () => {
     return knex('language').insert(language)
       .then(() => {
         const result = knex('language').where(language).select('lang_code');

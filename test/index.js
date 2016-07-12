@@ -20,4 +20,5 @@ describe('Migrations test runner', () => {
   getTest('Category', './migrations/category.js');
   getTest('Tab', './migrations/tag.js');
   getTest('Language', './migrations/language.js');
+  getTest('Resource Type', './migrations/resource_type.js');
 });
