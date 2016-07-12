@@ -18,4 +18,5 @@ describe('Migrations test runner', () => {
   getTest('Website', './migrations/website.js');
   getTest('Category', './migrations/category.js');
   getTest('Tab', './migrations/tag.js');
+  getTest('Language', './migrations/language.js');
 });
