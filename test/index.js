@@ -10,6 +10,7 @@ function getTest(name, path) {
 
 // Global before block to make sure we're starting with a totally clean DB
 before((done) => knex.migrate.rollback(config)
+  .then(() => knex.migrate.latest(config))
   .then(() => done())
 );
 

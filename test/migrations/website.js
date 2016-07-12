@@ -13,15 +13,61 @@ describe('Make sure `website` table exists with proper schema', () => {
     date_checked: now,
   };
 
-  // Runs all migrations upto the most current
-  beforeEach((done) => knex.migrate.latest(config)
-    .then(() => knex('website').insert(site))
-    .then(() => done())
-    .catch((e) => console.error(e))
-  );
+  const name_empty = {
+    url: 'share.america.gov',
+    date_checked: now,
+  };
+
+  const url_empty = {
+    name: 'share',
+    date_checked: now,
+  };
+
+  const date_empty = {
+    name: 'share',
+    url: 'share.america.gov',
+  };
+
+  const url_ununique = {
+    name: 'share',
+    url: 'share.america.gov',
+    date_checked: now,
+  };
+
+  it('should fail if name is null', () => {
+    return knex('website').insert(name_empty)
+      .catch((err) => {
+        expect(err.errno).to.equal(1364);
+        expect(err.code).to.equal('ER_NO_DEFAULT_FOR_FIELD');
+      });
+  });
+
+  it('should fail if url is null', () => {
+    return knex('website').insert(url_empty)
+      .catch((err) => {
+        expect(err.errno).to.equal(1364);
+        expect(err.code).to.equal('ER_NO_DEFAULT_FOR_FIELD');
+      });
+  });
+
+  it('should fail if url is not unique', () => {
+    return knex('website').insert(url_ununique)
+      .catch((err) => {
+        expect(err.errno).to.equal(1169);
+        expect(err.code).to.equal('ER_DUP_UNIQUE');
+      });
+  });
+
+  it('should fail if date is null', () => {
+    return knex('website').insert(date_empty)
+      .catch((err) => {
+        expect(err.errno).to.equal(1364);
+        expect(err.code).to.equal('ER_NO_DEFAULT_FOR_FIELD');
+      });
+  });
 
   it('should return the website name', () => {
     const result = knex('website').where(site).select('url');
     return expect(result).to.eventually.eql([{ url: 'share.america.gov' }]);
   });
-});
+})
