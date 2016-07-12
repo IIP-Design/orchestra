@@ -3,5 +3,7 @@ lib/database/seeds/language.js
 
 
 node_modules
-config.js
 *.log
+
+# Application specific
+config.js
