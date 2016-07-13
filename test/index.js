@@ -25,4 +25,5 @@ describe('Migrations test runner', () => {
   getTest('Glossary Term', './migrations/glossary_term.js');
   getTest('Media', './migrations/media.js');
   getTest('Instructor', './migrations/instructor.js');
+  getTest('Lesson', './migrations/lesson.js');
 });
