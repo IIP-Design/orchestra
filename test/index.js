@@ -23,4 +23,5 @@ describe('Migrations test runner', () => {
   getTest('Resource Type', './migrations/resource_type.js');
   getTest('Resource', './migrations/resource.js');
   getTest('Glossary Term', './migrations/glossary_term.js');
+  getTest('Media', './migrations/media.js');
 });
