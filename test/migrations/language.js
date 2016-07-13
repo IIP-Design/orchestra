@@ -9,7 +9,7 @@ describe('Make sure `language` table exists with proper schema', () => {
   };
 
   const lang_code_null = {
-    lang_code: undefined,
+    lang_code: null,
     title: 'Arabic'
   };
 
@@ -20,7 +20,7 @@ describe('Make sure `language` table exists with proper schema', () => {
 
   const title_null = {
     lang_code: 'ar',
-    title: undefined
+    title: null
   };
 
   it('should insert correctly and return the language title', () => {

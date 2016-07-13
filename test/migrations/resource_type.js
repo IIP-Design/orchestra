@@ -8,7 +8,7 @@ describe('Ensure `resource_type` table exists with proper schema', () => {
   };
 
   const resource_type_null = {
-    title: undefined
+    title: null
   };
 
   const resource_type_ununique = {

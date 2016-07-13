@@ -13,7 +13,7 @@ describe('Ensure `glossary_term` table exists with proper schema', () => {
   };
 
   const date_created_null = {
-    date_created: undefined,
+    date_created: null,
     date_modified: now,
     title: 'dog',
     description: 'A type of animal'
@@ -21,7 +21,7 @@ describe('Ensure `glossary_term` table exists with proper schema', () => {
 
   const date_modified_null = {
     date_created: now,
-    date_modified: undefined,
+    date_modified: null,
     title: 'dog',
     description: 'A type of animal'
   };
@@ -29,7 +29,7 @@ describe('Ensure `glossary_term` table exists with proper schema', () => {
   const title_null = {
     date_created: now,
     date_modified: now,
-    title: undefined,
+    title: null,
     description: 'A type of animal'
   };
 
@@ -44,7 +44,7 @@ describe('Ensure `glossary_term` table exists with proper schema', () => {
     date_created: now,
     date_modified: now,
     title: 'dog',
-    description: undefined
+    description: null
   };
 
   it('should insert correctly and return the glossary term title', () => {

@@ -15,7 +15,7 @@ describe('Ensure `resource` table exists with proper schema', () => {
   };
 
   const date_created_null = {
-    date_created: undefined,
+    date_created: null,
     date_modified: now,
     title: 'Tinker, Tailor, Soldier, Spy',
     description: 'In the bleak days of the Cold War, espionage veteran George Smiley is forced from semi-retirement to uncover a Soviet agent within MI6.',
@@ -25,7 +25,7 @@ describe('Ensure `resource` table exists with proper schema', () => {
 
   const date_modified_null = {
     date_created: now,
-    date_modified: undefined,
+    date_modified: null,
     title: 'Tinker, Tailor, Soldier, Spy',
     description: 'In the bleak days of the Cold War, espionage veteran George Smiley is forced from semi-retirement to uncover a Soviet agent within MI6.',
     url: 'http://www.focusfeatures.com/tinker_tailor_soldier_spy',
@@ -35,7 +35,7 @@ describe('Ensure `resource` table exists with proper schema', () => {
   const title_null = {
     date_created: now,
     date_modified: now,
-    title: undefined,
+    title: null,
     description: 'In the bleak days of the Cold War, espionage veteran George Smiley is forced from semi-retirement to uncover a Soviet agent within MI6.',
     url: 'http://www.focusfeatures.com/tinker_tailor_soldier_spy',
     resource_type: 1
@@ -45,7 +45,7 @@ describe('Ensure `resource` table exists with proper schema', () => {
     date_created: now,
     date_modified: now,
     title: 'Tinker, Tailor, Soldier, Spy',
-    description: undefined,
+    description: null,
     url: 'http://www.focusfeatures.com/tinker_tailor_soldier_spy',
     resource_type: 1
   };
@@ -55,7 +55,7 @@ describe('Ensure `resource` table exists with proper schema', () => {
     date_modified: now,
     title: 'Tinker, Tailor, Soldier, Spy',
     description: 'In the bleak days of the Cold War, espionage veteran George Smiley is forced from semi-retirement to uncover a Soviet agent within MI6.',
-    url: undefined,
+    url: null,
     resource_type: 1
   };
 
@@ -74,7 +74,7 @@ describe('Ensure `resource` table exists with proper schema', () => {
     title: 'Tinker, Tailor, Soldier, Spy',
     description: 'In the bleak days of the Cold War, espionage veteran George Smiley is forced from semi-retirement to uncover a Soviet agent within MI6.',
     url: 'http://www.focusfeatures.com/tinker_tailor_soldier_spy/2',
-    resource_type: undefined
+    resource_type: null
   };
 
   const resource_type_invalid = {
