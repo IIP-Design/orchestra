@@ -27,4 +27,5 @@ describe('Migrations test runner', () => {
   getTest('Instructor', './migrations/instructor.js');
   getTest('Lesson', './migrations/lesson.js');
   getTest('Course', './migrations/course.js');
+  getTest('Quiz', './migrations/quiz.js');
 });
