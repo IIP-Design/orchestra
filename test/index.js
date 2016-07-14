@@ -18,7 +18,7 @@ before((done) => knex.migrate.rollback(config)
 describe('Migrations test runner', () => {
   getTest('Website', './migrations/website.js');
   getTest('Category', './migrations/category.js');
-  getTest('Tab', './migrations/tag.js');
+  getTest('Tag', './migrations/tag.js');
   getTest('Language', './migrations/language.js');
   getTest('Resource Type', './migrations/resource_type.js');
   getTest('Resource', './migrations/resource.js');
