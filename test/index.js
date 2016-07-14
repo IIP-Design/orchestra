@@ -28,4 +28,12 @@ describe('Migrations test runner', () => {
   getTest('Lesson', './migrations/lesson.js');
   getTest('Course', './migrations/course.js');
   getTest('Quiz', './migrations/quiz.js');
+  getTest('Course Lesson Join Table', './migrations/course_lesson.js');
+  getTest('Course Category Join Table', './migrations/course_category.js');
+  getTest('Lesson Tag Join Table', './migrations/lesson_tag.js');
+  getTest('Lesson Media Join Table', './migrations/lesson_media.js');
+  getTest('Lesson Glossary Join Table', './migrations/lesson_glossary.js');
+  getTest('Lesson Instructor Join Table', './migrations/lesson_instructor.js');
+  getTest('Lesson Quiz Join Table', './migrations/lesson_quiz.js');
+  getTest('Lesson Resource Join Table', './migrations/lesson_resource.js');
 });
