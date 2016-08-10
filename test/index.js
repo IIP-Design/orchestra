@@ -10,9 +10,9 @@ function getTest(name, path) {
 
 // Global before block to make sure we're starting with a totally clean DB
 before(() => {
-  return knex.migrate.rollback(config)
+  return knex.migrate.rollback()
     .then(() => {
-      return knex.migrate.latest(config);
+      return knex.migrate.latest();
     })
 });
 
@@ -43,7 +43,7 @@ describe('Migrations test runner', () => {
 describe('Application Configuration and Setup', () => {
   // Rollback the DB before the next test block
   before(() => {
-    return knex.migrate.rollback(config);
+    return knex.migrate.rollback();
   });
 
   getTest('Configuration', './application/configure.js');

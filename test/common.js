@@ -1,5 +1,5 @@
-const config = require('../config').database.test;
-const knex = require('knex')(config);
+const config = require('../config')
+const knex = require('knex')(config.database.test);
 const chai = require('chai');
 const cap = require('chai-as-promised');
 

@@ -1,7 +1,6 @@
 const common = require('../common');
 const knex = common.knex;
 const expect = common.expect;
-const config = common.config;
 
 
 describe('Ensure that `lesson_glossary` table exists with proper schema', () => {
