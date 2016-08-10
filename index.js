@@ -1,9 +1,6 @@
-var config = require('./config');
-var orchestra = require('./lib/orchestra');
+const config = require('./config');
+const app = require('./lib/application/index');
 
-// Do some checking for new configuration. Setup database, do migrations and seed if necessary
-// Return app object with config stored therein
-var app = orchestra.setup(config);
-
-// daemon process started and run forever
-app.init();
+app.setup(config)
+  .then((clients) => app.init(clients))
+  .catch((err) => console.error(err.stack));

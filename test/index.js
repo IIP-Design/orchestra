@@ -39,3 +39,13 @@ describe('Migrations test runner', () => {
   getTest('Lesson Quiz Join Table', './migrations/lesson_quiz.js');
   getTest('Lesson Resource Join Table', './migrations/lesson_resource.js');
 });
+
+describe('Application Configuration and Setup', () => {
+  // Rollback the DB before the next test block
+  before(() => {
+    return knex.migrate.rollback(config);
+  });
+
+  getTest('Configuration', './application/configure.js');
+  getTest('Setup', './application/setup.js');
+});
