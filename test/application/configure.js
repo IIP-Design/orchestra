@@ -2,7 +2,7 @@ const fs = require('fs');
 const common = require('../common');
 const knex = common.knex;
 const expect = common.expect;
-const config = common.config;
+const config = require('../../config');
 const configure = require('../../lib/application/configure.js');
 
 
@@ -39,10 +39,15 @@ function newest(files) {
 }
 
 
-describe('Configure the application', () => {
-  it('should return an array of client objects', () => {
+describe('Configure the client objects for interacting with WP: ', () => {
+  it('should return an array', () => {
     const clients = configure.clients(config);
     expect(clients).to.be.a('array');
+  });
+
+  it('should return an array of client objects, whose constructor is "Client"', () => {
+    const clients = configure.clients(config);
+    expect(clients[0].constructor.name).to.equal('Client');
   });
 });
 
@@ -51,20 +56,19 @@ describe('Configure the production db', () => {
   it('should return the current migration version', () => {
     return Promise.all([
       getCurrentMigration('lib/database/migrations'),
-      configure.database(config)
+      configure.database(config.database.test)
     ])
     .then((result) => expect(result[0]).to.equal(result[1]));
   });
 
   it('should seed the database with lanaguage codes', () => {
-    return configure.database(config)
+    return configure.database(config.database.test)
       .then(() => {
         const result = knex('language').where({
-          lang_code: 'en',
           title: 'English'
-        }).select('id');
+        }).select('lang_code');
 
-        expect(result).to.eventually.eql([{ id: 222 }]);
+        expect(result).to.eventually.eql([{ lang_code: 'en' }]);
       })
   });
 });

@@ -1,4 +1,4 @@
-const config = require('./config').database.production;
+const config = require('./config');
 const app = require('./lib/application/index');
 
 app.setup(config)
