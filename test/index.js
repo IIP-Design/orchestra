@@ -47,5 +47,4 @@ describe('Application Configuration and Setup', () => {
   });
 
   getTest('Configuration', './application/configure.js');
-  getTest('Setup', './application/setup.js');
 });
