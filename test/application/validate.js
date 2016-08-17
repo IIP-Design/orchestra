@@ -1,38 +1,23 @@
+const _ = require('underscore');
 const rewire = require('rewire');
 const constraints = require('../../lib/utils/validation');
+const config = require('../../config');
 const common = require('../common');
 const expect = common.expect;
 const setup = rewire('../../lib/application/setup');
 
 
-describe('Validate config.js constraints, a.k.a. "required fields"', () => {
+describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => {
   const validateConfig = setup.__get__('validateConfig');
 
   it('should fail if config is empty', () => {
-    const config = {}
+    const config = {};
     expect(() => validateConfig(config)).to.throw(ReferenceError);
   });
 
   it('should fail if config does not contain database key', () => {
-    const config = {
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
-    };
-    const result = validateConfig(config);
+    const testConfig = _.omit(config, ['database']);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database');
@@ -40,26 +25,15 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should fail if config.database does not contain a production database', () => {
-    const config = {
-      database: {},
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
-    };
-    const result = validateConfig(config);
+    const testConfig = {
+      database: {
+        test: config.database.test,
+        dev: config.database.dev
+      },
+      websites: config.websites,
+      logging: config.logging
+    }
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production');
@@ -67,47 +41,17 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should fail if config.database.production does not have a client key', () => {
-    const config = {
+    const testConfig = {
       database: {
-        production: {
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
-        },
+        production: _.omit(config.database.production, ['client']),
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.client');
@@ -115,48 +59,22 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should fail if database.production.client is not a MySQL compatible database client', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          connection: {
-            client: 'pg',
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
+          client: 'pg',
+          connection: config.database.production.connection,
+          pool: config.database.production.pool,
+          migrations: config.database.production.migrations,
+          seeds: config.database.production.seeds
         },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.client');
@@ -164,41 +82,16 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should fail if database.production.connection does not exist', () => {
-    const config = {
+    const testConfig = {
       database: {
-        production: {
-          client: 'mysql',
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
-        }
+        production: _.omit(config.database.production, ['connection']),
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.connection');
@@ -206,47 +99,22 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should fail if database.production.connection.host does not exist', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
-        }
+          client: config.database.production.client,
+          connection: _.omit(config.database.production.connection, ['host']),
+          pool: config.database.production.pool,
+          migrations: config.database.production.migrations,
+          seeds: config.database.production.seeds
+        },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.connection.host');
@@ -254,144 +122,72 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should pass if database.production.connection.port does not exist', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
-        }
+          client: config.database.production.client,
+          connection: _.omit(config.database.production.connection, ['port']),
+          pool: config.database.production.pool,
+          migrations: config.database.production.migrations,
+          seeds: config.database.production.seeds
+        },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
   it('should fail if port is not a string', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
+          client: config.database.production.client,
           connection: {
-            host: 'localhost',
+            host: config.database.production.connection.host,
             port: 3306,
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
+            user: config.database.production.connection.user,
+            password: config.database.production.connection.password,
+            database: config.database.production.connection.database
           },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
-        }
+          pool: config.database.production.pool,
+          migrations: config.database.production.migrations,
+          seeds: config.database.production.seeds
+        },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
-
-    console.log(result);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.connection.port');
-    expect(result.error[0].message).to.equal('Must be a string');
+    expect(result.error[0].message).to.equal('must be string, but is number');
   });
 
   it('should fail if database.production.connection.user does not exist', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
-        }
+          client: config.database.production.client,
+          connection: _.omit(config.database.production.connection, ['user']),
+          pool: config.database.production.pool,
+          migrations: config.database.production.migrations,
+          seeds: config.database.production.seeds
+        },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.connection.user');
@@ -399,47 +195,22 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should fail if database.production.connection.password does not exist', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
-        }
+          client: config.database.production.client,
+          connection: _.omit(config.database.production.connection, ['password']),
+          pool: config.database.production.pool,
+          migrations: config.database.production.migrations,
+          seeds: config.database.production.seeds
+        },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.connection.password');
@@ -447,47 +218,22 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should fail if database.production.connection.database does not exist', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-          }
+          client: config.database.production.client,
+          connection: _.omit(config.database.production.connection, ['database']),
+          pool: config.database.production.pool,
+          migrations: config.database.production.migrations,
+          seeds: config.database.production.seeds
         },
-        pool: {
-          min: 2,
-          max: 10
-        },
-        migrations: {
-          tableName: 'migrations',
-          directory: 'path/to/migrations/dir'
-        },
-        seeds: {
-          directory: 'path/to/seeds/dir'
-        }
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.connection.database');
@@ -495,183 +241,82 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should pass if database.production.pool does not exist', () => {
-    const config = {
+    const testConfig = {
       database: {
-        production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
-        }
+        production: _.omit(config.database.production, ['pool']),
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
   it('should pass if database.production.pool.min does not exist', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
+          client: config.database.production.client,
+          connection: config.database.production.connection,
+          pool: _.omit(config.database.production.pool, ['min']),
+          migrations: config.database.production.migrations,
+          seeds: config.database.production.seeds
         },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
   it('should pass if database.production.pool.max does not exist', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min:2
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
+          client: config.database.production.client,
+          connection: config.database.production.connection,
+          pool: _.omit(config.database.production.pool, ['max']),
+          migrations: config.database.production.migrations,
+          seeds: config.database.production.seeds
         },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
   it('should fail if database.production.pool.min and/or database.production.pool.max is not a number', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
+          client: config.database.production.client,
+          connection: config.database.production.connection,
           pool: {
             min: '2',
             max: '10'
           },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
+          migrations: config.database.production.migrations,
+          seeds: config.database.production.seeds
         },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.pool.min');
@@ -681,137 +326,61 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should pass if database.production.migrations does not exist', () => {
-    const config = {
+    const testConfig = {
       database: {
-        production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
-        },
+        production: _.omit(config.database.production, ['migrations']),
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
   it('should pass if database.production.migrations.tableName does not exist', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
+          client: config.database.production.client,
+          connection: config.database.production.connection,
+          pool: config.database.production.pool,
+          migrations: _.omit(config.database.production.migrations, ['tableName']),
+          seeds: config.database.production.seeds
         },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
   it('should fail if database.production.migrations.tableName is not a string', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
+          client: config.database.production.client,
+          connection: config.database.production.connection,
+          pool: config.database.production.pool,
           migrations: {
-            tableName: [ 'hello world' ],
-            directory: 'path/to/migrations/dir'
+            tableName: ['migrations'],
+            directory: config.database.production.migrations.directory
           },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
+          seeds: config.database.production.seeds
         },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.migrations.tableName');
@@ -819,237 +388,176 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should pass if database.production.migrations.directory does not exist', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
+          client: config.database.production.client,
+          connection: config.database.production.connection,
+          pool: config.database.production.pool,
+          migrations: _.omit(config.database.production.migrations, ['directory']),
+          seeds: config.database.production.seeds
         },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
+
 
     expect(result.valid).to.equal(true);
   });
 
   it('should fail if database.production.migrations.directory is not a string', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
+          client: config.database.production.client,
+          connection: config.database.production.connection,
+          pool: config.database.production.pool,
           migrations: {
-            tableName: 'migrations',
-            directory: 4
+            tableName: config.database.production.migrations.tableName,
+            directory: ['directory']
           },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
+          seeds: config.database.production.seeds
         },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.migrations.directory');
     expect(result.error[0].message).to.equal('Provide a directory {string} for database migration scripts');
   });
 
-  it('should pass if database.production.migrations.extension does not exist', () => {});
-  it('should fail if database.production.migrations.extension is not a string', () => {});
-  it('should pass if database.production.migrations.disableTransactions does not exist', () => {});
-  it('should fail if database.production.migrations.disableTransactions is not a boolean', () => {});
+  it('should pass if database.production.migrations.extension does not exist', () => {
+    const testConfig = config;
+    const result = validateConfig(testConfig);
 
-  it('should succeed if database.production.seeds does not exist', () => {
-    const config = {
+    expect(result.valid).to.equal(true);
+  });
+
+  it('should fail if database.production.migrations.extension is not a string', () => {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
+          client: config.database.production.client,
+          connection: config.database.production.connection,
+          pool: config.database.production.pool,
           migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/dir'
-          }
-        }
+            tableName: config.database.production.migrations.tableName,
+            directory: config.database.production.migrations.directory,
+            extension: ['js'],
+          },
+          seeds: config.database.production.seeds
+        },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.database.production.migrations.extension');
+    expect(result.error[0].message).to.equal('must be string, but is array');
+  });
+
+  it('should pass if database.production.migrations.disableTransactions does not exist', () => {
+    const testConfig = config;
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(true);
+  });
+
+  it('should fail if database.production.migrations.disableTransactions is not a boolean', () => {
+    const testConfig = {
+      database: {
+        production: {
+          client: config.database.production.client,
+          connection: config.database.production.connection,
+          pool: config.database.production.pool,
+          migrations: {
+            tableName: config.database.production.migrations.tableName,
+            directory: config.database.production.migrations.directory,
+            disableTransactions: 'false',
+          },
+          seeds: config.database.production.seeds
+        },
+        test: config.database.test,
+        dev: config.database.dev
+      },
+      websites: config.websites,
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.database.production.migrations.disableTransactions');
+    expect(result.error[0].message).to.equal('must be boolean, but is string');
+  });
+
+  it('should succeed if database.production.seeds does not exist', () => {
+    const testConfig = {
+      database: {
+        production: _.omit(config.database.production, ['seeds']),
+        test: config.database.test,
+        dev: config.database.dev
+      },
+      websites: config.websites,
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
   it('should fail if database.production.seeds is not an object', () => {
-    const config = {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/dir'
-          },
-          seeds: 'test'
-        }
+          client: config.database.production.client,
+          connection: config.database.production.connection,
+          pool: config.database.production.pool,
+          migrations: config.database.production.migrations,
+          seeds: 'seeds'
+        },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.seeds');
     expect(result.error[0].message).to.equal('If provided, it must be an object with at least a `directory` key and a path {string} as the value. See ./docs/config-example.js.');
   });
 
-  it('should fail if database.production.seeds.directory is empty', () => {
-    const config = {
+  it('should succeed if database.production.seeds.directory is empty', () => {
+    const testConfig = {
       database: {
         production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/dir'
-          },
-          seeds: {}
-        }
+          client: config.database.production.client,
+          connection: config.database.production.connection,
+          pool: config.database.production.pool,
+          migrations: config.database.production.migrations,
+          seeds: _.omit(config.database.production.seeds, ['directory'])
+        },
+        test: config.database.test,
+        dev: config.database.dev
       },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
+      websites: config.websites,
+      logging: config.logging
     };
-    const result = validateConfig(config);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.database.production.seeds');
@@ -1057,36 +565,8 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should fail if config does not contain websites key', () => {
-    const config = {
-      database: {
-        production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
-        },
-      },
-      logging: {
-        debug_file: '/path/to/file.log',
-        error_file: '/path/to/file.log'
-      }
-    };
-    const result = validateConfig(config);
+    const testConfig = _.omit(config, ['websites']);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.websites');
@@ -1094,44 +574,8 @@ describe('Validate config.js constraints, a.k.a. "required fields"', () => {
   });
 
   it('should fail if config does not contain logging key', () => {
-    const config = {
-      database: {
-        production: {
-          client: 'mysql',
-          connection: {
-            host: 'localhost',
-            port: '3306',
-            user: 'ninasimone',
-            password: 'sinnerman',
-            database: 'database'
-          },
-          pool: {
-            min: 2,
-            max: 10
-          },
-          migrations: {
-            tableName: 'migrations',
-            directory: 'path/to/migrations/dir'
-          },
-          seeds: {
-            directory: 'path/to/seeds/dir'
-          }
-        },
-      },
-      websites: [
-        {
-          name: 'www.website.gov',
-          username: 'wp_username',
-          password: 'wp_password',
-          url: 'http://www.production_url.gov',
-          xmlrpc: 'http://www.production_url.gov/xmlrpc.php',
-          languages: ['en', 'fr'],
-          update_frequency: '30000',
-          post_type: ['courses', 'lessons', 'instructors']
-        }
-      ],
-    };
-    const result = validateConfig(config);
+    const testConfig = _.omit(config, ['logging']);
+    const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.logging');
