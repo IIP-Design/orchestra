@@ -1,7 +1,7 @@
 const _ = require('underscore');
 const rewire = require('rewire');
 const constraints = require('../../lib/utils/validation');
-const config = require('../../config');
+const config = require('../../docs/config-example');
 const common = require('../common');
 const expect = common.expect;
 const setup = rewire('../../lib/application/setup');
@@ -573,6 +573,263 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     expect(result.error[0].message).to.equal('is missing and not optional');
   });
 
+  it('should fail if websites[i].name does not exist', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        return _.omit(i, ['name'])
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.websites[0].name');
+    expect(result.error[0].message).to.equal('is missing and not optional');
+  });
+
+  it('should fail if websites[i].name is not a string', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        i.name = ['website'];
+        return i;
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.websites[0].name');
+    expect(result.error[0].message).to.equal('must be string, but is array');
+  });
+
+  it('should fail if websites[i].username does not exist', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        const web = _.omit(i, ['username']);
+        return web;
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.websites[0].username');
+    expect(result.error[0].message).to.equal('is missing and not optional');
+  });
+
+  it('should fail if websites[i].username is not a string', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        i.username = ['test'];
+        return i;
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.websites[0].username');
+    expect(result.error[0].message).to.equal('must be string, but is array');
+  });
+
+  it('should fail if websites[i].password does not exist', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        return _.omit(i, ['password'])
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.websites[0].password');
+    expect(result.error[0].message).to.equal('is missing and not optional');
+  });
+
+  it('should fail if websites[i].password is not a string', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        i.password= ['test'];
+        return i;
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.websites[0].password');
+    expect(result.error[0].message).to.equal('must be string, but is array');
+  });
+
+  it('should fail if websites[i].url does not exist', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        return _.omit(i, ['url'])
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.websites[0].url');
+    expect(result.error[0].message).to.equal('is missing and not optional');
+  });
+
+  it('should fail if websites[i].url is not a string', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        i.url = ['test'];
+        return i;
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.websites[0].url');
+    expect(result.error[0].message).to.equal('must be string, but is array');
+  });
+
+  it('should pass if websites[i].xmlrpc does not exist', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        return _.omit(i, ['xmlrpc'])
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(true);
+  });
+
+  it('should fail if websites[i].xmlrpc is not a string', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        i.xmlrpc = ['test'];
+        return i;
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.websites[0].xmlrpc');
+    expect(result.error[0].message).to.equal('must be string, but is array');
+  });
+
+  it('should pass if websites[i].languages does not exist', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        return _.omit(i, ['langauges'])
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(true);
+  });
+
+  it('should fail if websites[i].languages is not an array', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        i.languages = 'test';
+        return i;
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.websites[0].languages');
+    expect(result.error[0].message).to.equal('must be array, but is string');
+  });
+
+  it('should pass if websites[i].update_frequency does not exist', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        return _.omit(i, ['update_frequency'])
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(true);
+  });
+
+  it('should fail if websites[i].update_frequency is not a string', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        i.update_frequency = ['test'];
+        return i;
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.websites[0].update_frequency');
+    expect(result.error[0].message).to.equal('must be string, but is array');
+  });
+
+  it('should pass if websites[i].post_types does not exist', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        return _.omit(i, ['post_types'])
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(true);
+  });
+
+  it('should fail if websites[i].post_types is not an array', () => {
+    const websites = _.map(config.websites, _.clone);
+    const testConfig = {
+      database: config.database,
+      websites: _.map(websites, (i) => {
+        i.post_types = 'test';
+        return i;
+      }),
+      logging: config.logging
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.websites[0].post_types');
+    expect(result.error[0].message).to.equal('must be array, but is string');
+  });
+
   it('should fail if config does not contain logging key', () => {
     const testConfig = _.omit(config, ['logging']);
     const result = validateConfig(testConfig);
@@ -580,5 +837,63 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     expect(result.valid).to.equal(false);
     expect(result.error[0].property).to.equal('@.logging');
     expect(result.error[0].message).to.equal('is missing and not optional');
+  });
+
+  it('should fail if logging.debug_file does not exist', () => {
+    const testConfig = {
+      database: config.database,
+      websites: config.websites,
+      logging: _.omit(config.logging, ['debug_file'])
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.logging.debug_file');
+    expect(result.error[0].message).to.equal('is missing and not optional');
+  });
+
+  it('should fail if logging.debug_file is not a string', () => {
+    const testConfig = {
+      database: config.database,
+      websites: config.websites,
+      logging: {
+        debug_file: ['test'],
+        error_file: config.logging.error_file
+      }
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.logging.debug_file');
+    expect(result.error[0].message).to.equal('must be string, but is array');
+  });
+
+  it('should fail if logging.error_file does not exist', () => {
+    const testConfig = {
+      database: config.database,
+      websites: config.websites,
+      logging: _.omit(config.logging, ['error_file'])
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.logging.error_file');
+    expect(result.error[0].message).to.equal('is missing and not optional');
+  });
+
+  it('should fail if logging.error_file is not a string', () => {
+    const testConfig = {
+      database: config.database,
+      websites: config.websites,
+      logging: {
+        debug_file: config.logging.debug_file,
+        error_file: ['test']
+      }
+    };
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+    expect(result.error[0].property).to.equal('@.logging.error_file');
+    expect(result.error[0].message).to.equal('must be string, but is array');
   });
 });
