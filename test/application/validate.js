@@ -15,554 +15,889 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     expect(() => validateConfig(config)).to.throw(ReferenceError);
   });
 
+
+
   it('should fail if config does not contain database key', () => {
+    // Remove the `database` property from the config object
     const testConfig = _.omit(config, ['database']);
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database');
-    expect(result.error[0].message).to.equal('is missing and not optional');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.equal('@.database');
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
+
+
 
   it('should fail if config.database does not contain a production database', () => {
     const testConfig = {
-      database: {
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: _.omit(config.database, ['production']),
       websites: config.websites,
       logging: config.logging
     }
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production');
-    expect(result.error[0].message).to.equal('is missing and not optional');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.equal('@.database.production');
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
-  it('should fail if config.database.production does not have a client key', () => {
+
+
+  it('should fail if config.database.[production, test, dev] does not have a client key', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: _.omit(config.database.production, ['client']),
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database objects, and remove the `client` property
+    _.each(db, (element, index) => {
+      const dbObject = {};
+
+      dbObject[index] = _.omit(element, ['client']);
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.client');
-    expect(result.error[0].message).to.equal('Must provide a valid MySQL compatible Node.js client, such as "mysql", "mysql2, "mariasql"');
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.client',
+        '@.database.test.client',
+        '@.database.dev.client'
+      ]);
+      expect(error.message).to.equal('Must provide a valid MySQL compatible Node.js client, such as "mysql", "mysql2, "mariasql"');
+    });
   });
 
-  it('should fail if database.production.client is not a MySQL compatible database client', () => {
+
+
+  it('should fail if database.[production, test, dev].client is not a MySQL compatible database client', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: 'pg',
-          connection: config.database.production.connection,
-          pool: config.database.production.pool,
-          migrations: config.database.production.migrations,
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the client property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index]['client'] = 'pg';
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.client');
-    expect(result.error[0].message).to.equal('Must provide a valid MySQL compatible Node.js client, such as "mysql", "mysql2, "mariasql"');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.oneOf([
+        '@.database.production.client',
+        '@.database.test.client',
+        '@.database.dev.client'
+      ]);
+      expect(error.message).to.equal('Must provide a valid MySQL compatible Node.js client, such as "mysql", "mysql2, "mariasql"');
+    });
   });
 
-  it('should fail if database.production.connection does not exist', () => {
+
+
+  it('should fail if database.[production, test, dev].connection does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: _.omit(config.database.production, ['connection']),
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database objects, and remove the `connection` property
+    _.each(db, (element, index) => {
+      const dbObject = {};
+
+      dbObject[index] = _.omit(element, ['connection']);
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.connection');
-    expect(result.error[0].message).to.equal('is missing and not optional');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.oneOf([
+        '@.database.production.connection',
+        '@.database.test.connection',
+        '@.database.dev.connection'
+      ]);
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
-  it('should fail if database.production.connection.host does not exist', () => {
+
+
+  it('should fail if database.[production, test, dev].connection.host does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: _.omit(config.database.production.connection, ['host']),
-          pool: config.database.production.pool,
-          migrations: config.database.production.migrations,
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the connection property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index]['connection'] = _.omit(element.connection, ['host']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.connection.host');
-    expect(result.error[0].message).to.equal('Must provide a database host ip');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.connection.host',
+        '@.database.test.connection.host',
+        '@.database.dev.connection.host'
+      ]);
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
-  it('should pass if database.production.connection.port does not exist', () => {
+
+
+  it('should pass if database.[production, test, dev].connection.port does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: _.omit(config.database.production.connection, ['port']),
-          pool: config.database.production.pool,
-          migrations: config.database.production.migrations,
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the connection property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index]['connection'] = _.omit(element.connection, ['port']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
+
+
 
   it('should fail if port is not a string', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: {
-            host: config.database.production.connection.host,
-            port: 3306,
-            user: config.database.production.connection.user,
-            password: config.database.production.connection.password,
-            database: config.database.production.connection.database
-          },
-          pool: config.database.production.pool,
-          migrations: config.database.production.migrations,
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the connection property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index]['connection']['port'] = 3306;
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.connection.port');
-    expect(result.error[0].message).to.equal('must be string, but is number');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.connection.port',
+        '@.database.test.connection.port',
+        '@.database.dev.connection.port'
+      ]);
+      expect(error.message).to.equal('must be string, but is number');
+    });
   });
 
-  it('should fail if database.production.connection.user does not exist', () => {
+
+
+  it('should fail if database.[production, test, dev].connection.user does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: _.omit(config.database.production.connection, ['user']),
-          pool: config.database.production.pool,
-          migrations: config.database.production.migrations,
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the connection property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index]['connection'] = _.omit(element.connection, ['user']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.connection.user');
-    expect(result.error[0].message).to.equal('Must provide a database username');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.connection.user',
+        '@.database.test.connection.user',
+        '@.database.dev.connection.user'
+      ]);
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
-  it('should fail if database.production.connection.password does not exist', () => {
+
+
+  it('should fail if database.[production, test, dev].connection.password does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: _.omit(config.database.production.connection, ['password']),
-          pool: config.database.production.pool,
-          migrations: config.database.production.migrations,
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the connection property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index]['connection'] = _.omit(element.connection, ['password']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.connection.password');
-    expect(result.error[0].message).to.equal('Must provide a database password');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.connection.password',
+        '@.database.test.connection.password',
+        '@.database.dev.connection.password'
+      ]);
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
-  it('should fail if database.production.connection.database does not exist', () => {
+
+
+  it('should fail if database.[production, test, dev].connection.database does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: _.omit(config.database.production.connection, ['database']),
-          pool: config.database.production.pool,
-          migrations: config.database.production.migrations,
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the connection property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index]['connection'] = _.omit(element.connection, ['database']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.connection.database');
-    expect(result.error[0].message).to.equal('Must provide a database name');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.connection.database',
+        '@.database.test.connection.database',
+        '@.database.dev.connection.database'
+      ]);
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
-  it('should pass if database.production.pool does not exist', () => {
+
+
+  it('should pass if database.[production, test, dev].pool does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: _.omit(config.database.production, ['pool']),
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the pool property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index] = _.omit(element, ['pool']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
-  it('should pass if database.production.pool.min does not exist', () => {
+
+
+  it('should pass if database.[production, test, dev].pool.min does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: config.database.production.connection,
-          pool: _.omit(config.database.production.pool, ['min']),
-          migrations: config.database.production.migrations,
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the connection property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index]['pool'] = _.omit(element, ['min']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
-  it('should pass if database.production.pool.max does not exist', () => {
+
+
+  it('should pass if database.[production, test, dev].pool.max does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: config.database.production.connection,
-          pool: _.omit(config.database.production.pool, ['max']),
-          migrations: config.database.production.migrations,
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the pool property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index]['pool'] = _.omit(element, ['max']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
-  it('should fail if database.production.pool.min and/or database.production.pool.max is not a number', () => {
+
+
+  it('should fail if database.[production, test, dev].pool.min and/or database.[production, test, dev].pool.max is not a number', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: config.database.production.connection,
-          pool: {
-            min: '2',
-            max: '10'
-          },
-          migrations: config.database.production.migrations,
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the pool property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      if (list[index].hasOwnProperty('pool') === true) {
+        list[index]['pool']['min'] = '2';
+        list[index]['pool']['max'] = '10';
+        dbObject[index] = list[index];
+      }
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.pool.min');
-    expect(result.error[0].message).to.equal('Provide a minimum number {number} of pooled database connections');
-    expect(result.error[1].property).to.equal('@.database.production.pool.max');
-    expect(result.error[1].message).to.equal('Provide a maximum number {number} of pooled database connections');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.pool.min',
+        '@.database.production.pool.max',
+        '@.database.test.pool.max',
+        '@.database.test.pool.min',
+        '@.database.dev.pool.max',
+        '@.database.dev.pool.min',
+      ]);
+      expect(error.message).to.equal('must be number, but is string');
+    });
   });
 
-  it('should pass if database.production.migrations does not exist', () => {
+
+
+  it('should pass if database.[production, test, dev].migrations does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: _.omit(config.database.production, ['migrations']),
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the migrations property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index] = _.omit(element, ['migrations']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
-  it('should pass if database.production.migrations.tableName does not exist', () => {
+
+
+  it('should pass if database.[production, test, dev].migrations.tableName does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: config.database.production.connection,
-          pool: config.database.production.pool,
-          migrations: _.omit(config.database.production.migrations, ['tableName']),
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the migrations property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index]['migrations'] = _.omit(element, ['tableName']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
-  it('should fail if database.production.migrations.tableName is not a string', () => {
+
+
+  it('should fail if database.[production, test, dev].migrations.tableName is not a string', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: config.database.production.connection,
-          pool: config.database.production.pool,
-          migrations: {
-            tableName: ['migrations'],
-            directory: config.database.production.migrations.directory
-          },
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the migrations property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      if (list[index].hasOwnProperty('migrations') && list[index]['migrations'].hasOwnProperty('tableName')) {
+        list[index]['migrations']['tableName'] = ['test'];
+        dbObject[index] = list[index];
+      }
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.migrations.tableName');
-    expect(result.error[0].message).to.equal('Provide a tableName {string} for database migrations');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.migrations.tableName',
+        '@.database.test.migrations.tableName',
+        '@.database.dev.migrations.tableName'
+      ]);
+      expect(error.message).to.equal('must be string, but is array');
+    });
   });
 
-  it('should pass if database.production.migrations.directory does not exist', () => {
+
+
+  it('should pass if database.[production, test, dev].migrations.directory does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: config.database.production.connection,
-          pool: config.database.production.pool,
-          migrations: _.omit(config.database.production.migrations, ['directory']),
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
-    const result = validateConfig(testConfig);
 
+    // Loop through each config.database object and mutate the migrations property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
 
-    expect(result.valid).to.equal(true);
-  });
+      list[index]['migrations'] = _.omit(element, ['directory']);
+      dbObject[index] = list[index];
 
-  it('should fail if database.production.migrations.directory is not a string', () => {
-    const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: config.database.production.connection,
-          pool: config.database.production.pool,
-          migrations: {
-            tableName: config.database.production.migrations.tableName,
-            directory: ['directory']
-          },
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
-      websites: config.websites,
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
 
-    expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.migrations.directory');
-    expect(result.error[0].message).to.equal('Provide a directory {string} for database migration scripts');
-  });
-
-  it('should pass if database.production.migrations.extension does not exist', () => {
-    const testConfig = config;
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
-  it('should fail if database.production.migrations.extension is not a string', () => {
+
+
+  it('should fail if database.[production, test, dev].migrations.directory is not a string', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: config.database.production.connection,
-          pool: config.database.production.pool,
-          migrations: {
-            tableName: config.database.production.migrations.tableName,
-            directory: config.database.production.migrations.directory,
-            extension: ['js'],
-          },
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the migrations property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      if (list[index].hasOwnProperty('migrations') && list[index]['migrations'].hasOwnProperty('directory')) {
+        list[index]['migrations']['directory'] = ['test'];
+        dbObject[index] = list[index];
+      }
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.migrations.extension');
-    expect(result.error[0].message).to.equal('must be string, but is array');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.migrations.directory',
+        '@.database.test.migrations.directory',
+        '@.database.dev.migrations.directory'
+      ]);
+      expect(error.message).to.equal('must be string, but is array');
+    });
   });
 
-  it('should pass if database.production.migrations.disableTransactions does not exist', () => {
-    const testConfig = config;
+
+
+  it('should pass if database.[production, test, dev].migrations.extension does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
+    const testConfig = {
+      database: {},
+      websites: config.websites,
+      logging: config.logging
+    };
+
+    // Loop through each config.database object and mutate the migrations property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index]['migrations'] = _.omit(element, ['extension']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
-  it('should fail if database.production.migrations.disableTransactions is not a boolean', () => {
+
+
+  it('should fail if database.[production, test, dev].migrations.extension is not a string', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: config.database.production.connection,
-          pool: config.database.production.pool,
-          migrations: {
-            tableName: config.database.production.migrations.tableName,
-            directory: config.database.production.migrations.directory,
-            disableTransactions: 'false',
-          },
-          seeds: config.database.production.seeds
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the migrations property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      if (list[index].hasOwnProperty('migrations') && list[index]['migrations'].hasOwnProperty('extension')) {
+        list[index]['migrations']['extension'] = ['test'];
+        dbObject[index] = list[index];
+      }
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.migrations.disableTransactions');
-    expect(result.error[0].message).to.equal('must be boolean, but is string');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.migrations.extension',
+        '@.database.test.migrations.extension',
+        '@.database.dev.migrations.extension',
+      ]);
+      expect(error.message).to.equal('must be string, but is array');
+    });
   });
 
-  it('should succeed if database.production.seeds does not exist', () => {
+
+
+  it('should pass if database.[production, test, dev].migrations.disableTransactions does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: _.omit(config.database.production, ['seeds']),
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the migrations property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index]['migrations'] = _.omit(element, ['disableTransactions']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(true);
   });
 
-  it('should fail if database.production.seeds is not an object', () => {
+
+
+  it('should fail if database.[production, test, dev].migrations.disableTransactions is not a boolean', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: config.database.production.connection,
-          pool: config.database.production.pool,
-          migrations: config.database.production.migrations,
-          seeds: 'seeds'
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the migrations property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      if (list[index].hasOwnProperty('migrations') && list[index]['migrations'].hasOwnProperty('disableTransactions')) {
+        list[index]['migrations']['disableTransactions'] = 'false';
+        dbObject[index] = list[index];
+      }
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.seeds');
-    expect(result.error[0].message).to.equal('If provided, it must be an object with at least a `directory` key and a path {string} as the value. See ./docs/config-example.js.');
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.migrations.disableTransactions',
+        '@.database.test.migrations.disableTransactions',
+        '@.database.dev.migrations.disableTransactions'
+      ]);
+      expect(error.message).to.equal('must be boolean, but is string');
+    });
   });
 
-  it('should succeed if database.production.seeds.directory is empty', () => {
+
+
+  it('should succeed if database.[production, test, dev].seeds does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
     const testConfig = {
-      database: {
-        production: {
-          client: config.database.production.client,
-          connection: config.database.production.connection,
-          pool: config.database.production.pool,
-          migrations: config.database.production.migrations,
-          seeds: _.omit(config.database.production.seeds, ['directory'])
-        },
-        test: config.database.test,
-        dev: config.database.dev
-      },
+      database: {},
       websites: config.websites,
       logging: config.logging
     };
+
+    // Loop through each config.database object and mutate the seeds property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      list[index] = _.omit(element, ['seeds']);
+      dbObject[index] = list[index];
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(true);
+  });
+
+
+
+  it('should fail if database.[production, test, dev].seeds is not an object', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
+    const testConfig = {
+      database: {},
+      websites: config.websites,
+      logging: config.logging
+    };
+
+    // Loop through each config.database object and mutate the migrations property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      if (list[index].hasOwnProperty('seeds')) {
+        list[index]['seeds'] = 'false';
+        dbObject[index] = list[index];
+      }
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.database.production.seeds');
-    expect(result.error[0].message).to.equal('If provided, it must be an object with at least a `directory` key and a path {string} as the value. See ./docs/config-example.js.');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.seeds',
+        '@.database.test.seeds',
+        '@.database.dev.seeds'
+      ]);
+      expect(error.message).to.equal('must be object, but is string');
+    });
   });
+
+
+
+  it('should fail if database.[production, test, dev].seeds.directory does not exist', () => {
+    // Deep clone database from config.database
+    const db = JSON.parse(JSON.stringify(config.database));
+
+    const testConfig = {
+      database: {},
+      websites: config.websites,
+      logging: config.logging
+    };
+
+    // Loop through each config.database object and mutate the migrations property
+    _.each(db, (element, index, list) => {
+      const dbObject = {};
+
+      if (list[index].hasOwnProperty('seeds')) {
+        list[index]['seeds'] = _.omit(element, ['directory']);
+        dbObject[index] = list[index];
+      }
+
+      // Append the dbObject to the testConfig.database object
+      _.extend(testConfig.database, dbObject);
+    });
+
+    const result = validateConfig(testConfig);
+
+    expect(result.valid).to.equal(false);
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.database.production.seeds.directory',
+        '@.database.test.seeds.directory',
+        '@.database.dev.seeds.directory'
+      ]);
+      expect(error.message).to.equal('is missing and not optional');
+    });
+  });
+
+
 
   it('should fail if config does not contain websites key', () => {
     const testConfig = _.omit(config, ['websites']);
@@ -573,8 +908,11 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     expect(result.error[0].message).to.equal('is missing and not optional');
   });
 
+
+
   it('should fail if websites[i].name does not exist', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -585,12 +923,18 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites[0].name');
-    expect(result.error[0].message).to.equal('is missing and not optional');
+
+    _.each(result.error, (error, index) => {
+      expect(error.property).to.equal('@.websites[' + index + '].name');
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
+
+
   it('should fail if websites[i].name is not a string', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -602,12 +946,18 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites[0].name');
-    expect(result.error[0].message).to.equal('must be string, but is array');
+
+    _.each(result.error, (error, index) => {
+      expect(error.property).to.equal('@.websites[' + index + '].name');
+      expect(error.message).to.equal('must be string, but is array');
+    });
   });
 
+
+
   it('should fail if websites[i].username does not exist', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -619,12 +969,18 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites[0].username');
-    expect(result.error[0].message).to.equal('is missing and not optional');
+
+    _.each(result.error, (error, index) => {
+      expect(error.property).to.equal('@.websites[' + index + '].username');
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
+
+
   it('should fail if websites[i].username is not a string', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -636,12 +992,18 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites[0].username');
-    expect(result.error[0].message).to.equal('must be string, but is array');
+
+    _.each(result.error, (error, index) => {
+      expect(error.property).to.equal('@.websites[' + index + '].username');
+      expect(error.message).to.equal('must be string, but is array');
+    });
   });
 
+
+
   it('should fail if websites[i].password does not exist', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -652,12 +1014,18 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites[0].password');
-    expect(result.error[0].message).to.equal('is missing and not optional');
+
+    _.each(result.error, (error, index) => {
+      expect(error.property).to.equal('@.websites[' + index + '].password');
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
+
+
   it('should fail if websites[i].password is not a string', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -669,12 +1037,18 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites[0].password');
-    expect(result.error[0].message).to.equal('must be string, but is array');
+
+    _.each(result.error, (error, index) => {
+      expect(error.property).to.equal('@.websites[' + index + '].password');
+      expect(error.message).to.equal('must be string, but is array');
+    });
   });
 
+
+
   it('should fail if websites[i].url does not exist', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -685,12 +1059,18 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites[0].url');
-    expect(result.error[0].message).to.equal('is missing and not optional');
+
+    _.each(result.error, (error, index) => {
+      expect(error.property).to.equal('@.websites[' + index + '].url');
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
+
+
   it('should fail if websites[i].url is not a string', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -702,12 +1082,18 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites[0].url');
-    expect(result.error[0].message).to.equal('must be string, but is array');
+
+    _.each(result.error, (error, index) => {
+      expect(error.property).to.equal('@.websites[' + index + '].url');
+      expect(error.message).to.equal('must be string, but is array');
+    });
   });
 
+
+
   it('should pass if websites[i].xmlrpc does not exist', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -720,8 +1106,11 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     expect(result.valid).to.equal(true);
   });
 
+
+
   it('should fail if websites[i].xmlrpc is not a string', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -733,12 +1122,18 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites[0].xmlrpc');
-    expect(result.error[0].message).to.equal('must be string, but is array');
+
+    _.each(result.error, (error, index) => {
+      expect(error.property).to.equal('@.websites[' + index + '].xmlrpc');
+      expect(error.message).to.equal('must be string, but is array');
+    });
   });
 
+
+
   it('should pass if websites[i].languages does not exist', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -751,8 +1146,11 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     expect(result.valid).to.equal(true);
   });
 
+
+
   it('should fail if websites[i].languages is not an array', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -764,12 +1162,18 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites[0].languages');
-    expect(result.error[0].message).to.equal('must be array, but is string');
+
+    _.each(result.error, (error, index) => {
+      expect(error.property).to.equal('@.websites[' + index + '].languages');
+      expect(error.message).to.equal('must be array, but is string');
+    });
   });
 
+
+
   it('should pass if websites[i].update_frequency does not exist', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -782,8 +1186,11 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     expect(result.valid).to.equal(true);
   });
 
+
+
   it('should fail if websites[i].update_frequency is not a string', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -795,12 +1202,18 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites[0].update_frequency');
-    expect(result.error[0].message).to.equal('must be string, but is array');
+
+    _.each(result.error, (error, index) => {
+      expect(error.property).to.equal('@.websites[' + index + '].update_frequency');
+      expect(error.message).to.equal('must be string, but is array');
+    });
   });
 
+
+
   it('should pass if websites[i].post_types does not exist', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -813,8 +1226,11 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     expect(result.valid).to.equal(true);
   });
 
+
+
   it('should fail if websites[i].post_types is not an array', () => {
-    const websites = _.map(config.websites, _.clone);
+    // Deep clone websites from config.websites
+    const websites = JSON.parse(JSON.stringify(config.websites));
     const testConfig = {
       database: config.database,
       websites: _.map(websites, (i) => {
@@ -826,17 +1242,25 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites[0].post_types');
-    expect(result.error[0].message).to.equal('must be array, but is string');
+
+    _.each(result.error, (error, index) => {
+      expect(error.property).to.equal('@.websites[' + index + '].post_types');
+      expect(error.message).to.equal('must be array, but is string');
+    });
   });
+
+
 
   it('should fail if config does not contain logging key', () => {
     const testConfig = _.omit(config, ['logging']);
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.logging');
-    expect(result.error[0].message).to.equal('is missing and not optional');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.equal('@.logging');
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
   it('should fail if logging.debug_file does not exist', () => {
@@ -848,8 +1272,11 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.logging.debug_file');
-    expect(result.error[0].message).to.equal('is missing and not optional');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.equal('@.logging.debug_file');
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
   it('should fail if logging.debug_file is not a string', () => {
@@ -864,8 +1291,11 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.logging.debug_file');
-    expect(result.error[0].message).to.equal('must be string, but is array');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.equal('@.logging.debug_file');
+      expect(error.message).to.equal('must be string, but is array');
+    });
   });
 
   it('should fail if logging.error_file does not exist', () => {
@@ -877,8 +1307,11 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.logging.error_file');
-    expect(result.error[0].message).to.equal('is missing and not optional');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.equal('@.logging.error_file');
+      expect(error.message).to.equal('is missing and not optional');
+    });
   });
 
   it('should fail if logging.error_file is not a string', () => {
@@ -893,7 +1326,10 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
     const result = validateConfig(testConfig);
 
     expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.logging.error_file');
-    expect(result.error[0].message).to.equal('must be string, but is array');
+
+    _.each(result.error, (error) => {
+      expect(error.property).to.equal('@.logging.error_file');
+      expect(error.message).to.equal('must be string, but is array');
+    });
   });
 });

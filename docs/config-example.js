@@ -21,7 +21,9 @@ module.exports = {
       },
       migrations: {
         tableName: "migrations",
-        directory: "/path/to/migrations"
+        directory: "/path/to/migrations",
+        extension: "js",
+        disableTransactions: false
       },
       seeds: {
         directory: "/path/to/seeds"
@@ -58,6 +60,15 @@ module.exports = {
       languages: ["en", "fr"],
       update_frequency: "30000",
       post_types: ["courses", "lessons", "instructors"]
+    },
+    {
+      name: "website2",
+      username: "wp_username",
+      password: "wp_password",
+      url: "https://www.website.gov",
+      xmlrpc: "https://www.website.gov/xmlrpc.php",
+      update_frequency: "30000",
+      post_types: ["post"]
     }
   ],
 
