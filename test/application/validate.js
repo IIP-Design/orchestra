@@ -4,7 +4,7 @@ const constraints = require('../../lib/utils/validation');
 const config = require('../../docs/config-example');
 const common = require('../common');
 const expect = common.expect;
-const setup = rewire('../../lib/application/setup');
+const setup = rewire('../../lib/application/index');
 
 
 describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => {

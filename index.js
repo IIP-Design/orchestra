@@ -1,7 +1,28 @@
-const config = require('./config');
-const logger = require('./lib/utils/logging');
-const app = require('./lib/application/index');
+#!/usr/bin/env node
 
-app.setup(config)
+const args = require('commander');
+
+
+// Arguments passed via the command line
+args
+  .version('1.0.0')
+  .option('-e, --environment <env>', 'Defaults to production. Other options are "test" and "dev"')
+  .option('-c, --config <path>', 'Defaults to ./config.js. See ./docs/config-example.js for an example file')
+  .parse(process.argv);
+
+
+// If not passed via the command line, set some reasonable defaults
+const config = args.config ? require(args.config) : require('./config');
+const env = args.environment ? args.environment : 'production';
+
+
+// Create the logger and the app constants
+const logger = require('./lib/utils/logging')(config);
+const app = require('./lib/application/index')(config, logger, env);
+
+
+// Setup and init the app
+app.setup()
   .then((clients) => app.init(clients))
   .catch((error) => logger.error(error));
+
