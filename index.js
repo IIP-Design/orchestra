@@ -16,6 +16,13 @@ const config = args.config ? require(args.config) : require('./config');
 const env = args.environment ? args.environment : 'production';
 
 
+// @todo: create one params object and added the config, logger, and env vars to that for easier passing arround
+// const params = {
+//   config: config,
+//   env: env,
+//   logger: logger
+// }
+
 // Create the logger and the app constants
 const logger = require('./lib/utils/logging')(config);
 const app = require('./lib/application/index')(config, logger, env);
