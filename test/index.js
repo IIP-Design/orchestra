@@ -46,5 +46,6 @@ describe('Application Configuration and Setup', () => {
     return knex.migrate.rollback();
   });
 
+  getTest('Validate config.js file', './application/validate.js');
   getTest('Configuration', './application/configure.js');
 });

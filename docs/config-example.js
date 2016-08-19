@@ -6,23 +6,46 @@
 module.exports = {
   /** Knexjs configuration object. See http://knexjs.org for all options. */
   database: {
-    client: "mysql || pg || sqlite",
+    production: {
+      client: "mysql",
       connection: {
-      host: "127.0.0.1",
-      user: "db_username",
-      password: "db_password",
-      database: "db_name"
+        host: "127.0.0.1",
+        port: "3306",
+        user: "db_username",
+        password: "db_password",
+        database: "db_name"
+      },
+      pool: {
+        min: 2,
+        max: 10
+      },
+      migrations: {
+        tableName: "migrations",
+        directory: "/path/to/migrations",
+        extension: "js",
+        disableTransactions: false
+      },
+      seeds: {
+        directory: "/path/to/seeds"
+      }
     },
-    pool: {
-      min: 2,
-      max: 10
+    test: {
+      client: "mysql",
+      connection: {
+        host: "127.0.0.1",
+        user: "db_username",
+        password: "db_password",
+        database: "db_name"
+      }
     },
-    migrations: {
-      tableName: "migrations",
-      directory: "./migrations"
-    },
-    seeds: {
-      directory: "./seeds"
+    dev: {
+      client: "mysql",
+      connection: {
+        host: "127.0.0.1",
+        user: "db_username",
+        password: "db_password",
+        database: "db_name"
+      }
     }
   },
 
@@ -34,31 +57,23 @@ module.exports = {
       password: "wp_password",
       url: "https://www.website.gov",
       xmlrpc: "https://www.website.gov/xmlrpc.php",
-      languages: [
-        "en",
-        "fr",
-        "fa",
-        "ar",
-        "pt",
-        "ru",
-        "zh",
-        "es",
-        "id"
-      ],
+      languages: ["en", "fr"],
       update_frequency: "30000",
-      post_types: ["post"]
+      post_types: ["courses", "lessons", "instructors"]
     },
     {
-      name: "website_name",
+      name: "website2",
       username: "wp_username",
       password: "wp_password",
       url: "https://www.website.gov",
       xmlrpc: "https://www.website.gov/xmlrpc.php",
-      languages: [
-        "en"
-      ],
-      update_frequency: "600000",
-      post_types: ["post", "publication"]
+      update_frequency: "30000",
+      post_types: ["post"]
     }
-  ]
+  ],
+
+  logging: {
+    debug_file: "/path/to/file.log",
+    error_file: "/path/to/file.log"
+  }
 }
