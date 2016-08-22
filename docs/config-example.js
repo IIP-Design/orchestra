@@ -5,6 +5,8 @@
 
 module.exports = {
   /** Knexjs configuration object. See http://knexjs.org for all options. */
+
+  // @todo: Move environment keys (production, test, and dev) up to the top level, and move database, website, and logging underneath each environment
   database: {
     production: {
       client: "mysql",
