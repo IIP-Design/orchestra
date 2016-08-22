@@ -4,11 +4,12 @@ const constraints = require('../../lib/utils/validation');
 const config = require('../../docs/config-example');
 const common = require('../common');
 const expect = common.expect;
-const setup = rewire('../../lib/application/setup');
+const setup = rewire('../../lib/application/index');
 
 
 describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => {
   const validateConfig = setup.__get__('validateConfig');
+  const logValidationErrors = setup.__get__('logValidationErrors');
 
   it('should fail if config is empty', () => {
     const config = {};
@@ -1331,5 +1332,26 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
       expect(error.property).to.equal('@.logging.error_file');
       expect(error.message).to.equal('must be string, but is array');
     });
+  });
+
+
+
+  it('should not throw an error if the config file is valid', () => {
+    const logger = console;
+    const result = logValidationErrors(config, logger);
+
+    expect(() => result).to.not.throw(Error);
+  });
+
+
+
+  it('should throw an error if the config file is not valid', () => {
+    const testConfig = {
+      database: config.database,
+      websites: config.websites
+    };
+    const logger = console
+
+    expect(() => logValidationErrors(testConfig, logger)).to.throw('@.logging is missing and not optional');
   });
 });

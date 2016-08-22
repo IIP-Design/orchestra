@@ -2,8 +2,9 @@ const fs = require('fs');
 const common = require('../common');
 const knex = common.knex;
 const expect = common.expect;
-const config = require('../../config');
-const configure = require('../../lib/application/configure.js');
+const config = common.config;
+const logger = require('../../lib/utils/logging')(config);
+const configure = require('../../lib/application/configure')(logger);
 
 
 // Helper functions
