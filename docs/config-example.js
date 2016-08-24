@@ -5,10 +5,8 @@
 
 module.exports = {
   /** Knexjs configuration object. See http://knexjs.org for all options. */
-
-  // @todo: Move environment keys (production, test, and dev) up to the top level, and move database, website, and logging underneath each environment
-  database: {
-    production: {
+  production: {
+    database: {
       client: "mysql",
       connection: {
         host: "127.0.0.1",
@@ -31,51 +29,104 @@ module.exports = {
         directory: "/path/to/seeds"
       }
     },
-    test: {
-      client: "mysql",
-      connection: {
-        host: "127.0.0.1",
-        user: "db_username",
-        password: "db_password",
-        database: "db_name"
+    websites: [
+      {
+        name: "website_name",
+        username: "wp_username",
+        password: "wp_password",
+        url: "https://www.website.gov",
+        api_url: "https://www.website.gov/xmlrpc.php",
+        languages: ["en", "fr"],
+        update_frequency: 30000,
+        post_types: ["courses", "lessons", "instructors"]
+      },
+      {
+        name: "website2",
+        username: "wp_username",
+        password: "wp_password",
+        url: "https://www.website.gov",
+        api_url: "https://www.website.gov/xmlrpc.php",
+        update_frequency: 30000,
+        post_types: ["post"]
       }
-    },
-    dev: {
-      client: "mysql",
-      connection: {
-        host: "127.0.0.1",
-        user: "db_username",
-        password: "db_password",
-        database: "db_name"
-      }
+    ],
+    logging: {
+      debug_file: "/path/to/file.log",
+      error_file: "/path/to/file.log"
     }
   },
-
-  /** An array of website objects */
-  websites: [
-    {
-      name: "website_name",
-      username: "wp_username",
-      password: "wp_password",
-      url: "https://www.website.gov",
-      xmlrpc: "https://www.website.gov/xmlrpc.php",
-      languages: ["en", "fr"],
-      update_frequency: "30000",
-      post_types: ["courses", "lessons", "instructors"]
+  test: {
+    database: {
+      client: "mysql",
+      connection: {
+        host: "127.0.0.1",
+        port: "3306",
+        user: "db_username",
+        password: "db_password",
+        database: "db_name"
+      }
     },
-    {
-      name: "website2",
-      username: "wp_username",
-      password: "wp_password",
-      url: "https://www.website.gov",
-      xmlrpc: "https://www.website.gov/xmlrpc.php",
-      update_frequency: "30000",
-      post_types: ["post"]
+    websites: [
+      {
+        name: "website_name",
+        username: "wp_username",
+        password: "wp_password",
+        url: "https://www.website.gov",
+        api_url: "https://www.website.gov/xmlrpc.php",
+        languages: ["en", "fr"],
+        update_frequency: 30000,
+        post_types: ["courses", "lessons", "instructors"]
+      },
+      {
+        name: "website2",
+        username: "wp_username",
+        password: "wp_password",
+        url: "https://www.website.gov",
+        api_url: "https://www.website.gov/xmlrpc.php",
+        update_frequency: 30000,
+        post_types: ["post"]
+      }
+    ],
+    logging: {
+      debug_file: "/path/to/file.log",
+      error_file: "/path/to/file.log"
     }
-  ],
-
-  logging: {
-    debug_file: "/path/to/file.log",
-    error_file: "/path/to/file.log"
+  },
+  development: {
+    database: {
+      client: "mysql",
+      connection: {
+        host: "127.0.0.1",
+        port: "3306",
+        user: "db_username",
+        password: "db_password",
+        database: "db_name"
+      }
+    },
+    websites: [
+      {
+        name: "website_name",
+        username: "wp_username",
+        password: "wp_password",
+        url: "https://www.website.dev",
+        api_url: "https://www.website.dev/xmlrpc.php",
+        languages: ["en", "fr"],
+        update_frequency: 30000,
+        post_types: ["courses", "lessons", "instructors"]
+      },
+      {
+        name: "website2",
+        username: "wp_username",
+        password: "wp_password",
+        url: "https://www.website.dev",
+        api_url: "https://www.website.dev/xmlrpc.php",
+        update_frequency: 30000,
+        post_types: ["post"]
+      }
+    ],
+    logging: {
+      debug_file: "/path/to/file.log",
+      error_file: "/path/to/file.log"
+    }
   }
 }
