@@ -35,9 +35,9 @@ module.exports = {
         username: "wp_username",
         password: "wp_password",
         url: "https://www.website.gov",
-        xmlrpc: "https://www.website.gov/xmlrpc.php",
+        api_url: "https://www.website.gov/xmlrpc.php",
         languages: ["en", "fr"],
-        update_frequency: "30000",
+        update_frequency: 30000,
         post_types: ["courses", "lessons", "instructors"]
       },
       {
@@ -45,8 +45,8 @@ module.exports = {
         username: "wp_username",
         password: "wp_password",
         url: "https://www.website.gov",
-        xmlrpc: "https://www.website.gov/xmlrpc.php",
-        update_frequency: "30000",
+        api_url: "https://www.website.gov/xmlrpc.php",
+        update_frequency: 30000,
         post_types: ["post"]
       }
     ],
@@ -72,9 +72,9 @@ module.exports = {
         username: "wp_username",
         password: "wp_password",
         url: "https://www.website.gov",
-        xmlrpc: "https://www.website.gov/xmlrpc.php",
+        api_url: "https://www.website.gov/xmlrpc.php",
         languages: ["en", "fr"],
-        update_frequency: "30000",
+        update_frequency: 30000,
         post_types: ["courses", "lessons", "instructors"]
       },
       {
@@ -82,8 +82,8 @@ module.exports = {
         username: "wp_username",
         password: "wp_password",
         url: "https://www.website.gov",
-        xmlrpc: "https://www.website.gov/xmlrpc.php",
-        update_frequency: "30000",
+        api_url: "https://www.website.gov/xmlrpc.php",
+        update_frequency: 30000,
         post_types: ["post"]
       }
     ],
@@ -109,9 +109,9 @@ module.exports = {
         username: "wp_username",
         password: "wp_password",
         url: "https://www.website.dev",
-        xmlrpc: "https://www.website.dev/xmlrpc.php",
+        api_url: "https://www.website.dev/xmlrpc.php",
         languages: ["en", "fr"],
-        update_frequency: "30000",
+        update_frequency: 30000,
         post_types: ["courses", "lessons", "instructors"]
       },
       {
@@ -119,8 +119,8 @@ module.exports = {
         username: "wp_username",
         password: "wp_password",
         url: "https://www.website.dev",
-        xmlrpc: "https://www.website.dev/xmlrpc.php",
-        update_frequency: "30000",
+        api_url: "https://www.website.dev/xmlrpc.php",
+        update_frequency: 30000,
         post_types: ["post"]
       }
     ],

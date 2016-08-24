@@ -1,13 +1,15 @@
-const config = require('../config')
-const knex = require('knex')(config.database.test);
+const config = require('../config').test
+const knex = require('knex')(config.database);
 const chai = require('chai');
 const cap = require('chai-as-promised');
 
 chai.use(cap);
 const expect = chai.expect;
 
-exports.config = config;
-exports.knex = knex;
-exports.cap = cap;
-exports.chai = chai;
-exports.expect = expect;
+module.exports = {
+  config: config,
+  knex: knex,
+  cap: cap,
+  chai: chai,
+  expect: expect
+}

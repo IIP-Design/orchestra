@@ -4,12 +4,41 @@ const constraints = require('../../lib/utils/validation');
 const config = require('../../docs/config-example');
 const common = require('../common');
 const expect = common.expect;
-const setup = rewire('../../lib/application/index');
+const utilities = rewire('../../lib/utils/index');
+
+
+
+/**
+  * A utility function to speed up writing test cases for validation
+  *
+  * @param {object} args - An object with at least the config object
+  * @param {function} callback - The unique test thing to test
+  *
+  */
+
+function createTestCase(args, callback) {
+  const clone = JSON.parse(JSON.stringify(args.config));
+  const test = {};
+
+  _.each(clone, (env, index, list) => {
+    let environment = {};
+    environment[index] = env;
+    environment = callback(env, environment, index);
+    _.extend(test, environment);
+  });
+
+  return test;
+}
+
+
 
 
 describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => {
-  const validateConfig = setup.__get__('validateConfig');
-  const logValidationErrors = setup.__get__('logValidationErrors');
+  const validateConfig = utilities.__get__('validateConfig');
+  const logValidationErrors = utilities.__get__('logValidationErrors');
+  const args = { config: config };
+
+
 
   it('should fail if config is empty', () => {
     const config = {};
@@ -19,28 +48,21 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should pass if config contains at least one environment [production, test, development]', () => {
-    const testConfig = _.omit(config, ['production', 'test']);
-    const result = validateConfig(testConfig);
-
+    const test = _.omit(config, ['production', 'test']);
+    const result = validateConfig(test);
     expect(result.valid).to.equal(true);
   });
 
 
 
   it('should fail if [production, test, development] does not contain database key', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabaseKey(env, environment, index) {
+      environment[index] = _.omit(env, ['database']);
+      return environment;
+    }
 
-    // Loop through each environment removing the database key/value pair
-    _.each(configClone, (env, index) => {
-      const envObject = {};
-
-      envObject[index] = _.omit(env, ['database']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseKey);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -57,20 +79,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should fail if config.[production, test, development].database does not have a client key', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeClientKey(env, environment, index) {
+      environment[index]['database'] = _.omit(env.database, ['client'])
+      return environment;
+    }
 
-    // Loop through each environment removing the database.client key/value pair
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database'] = _.omit(db, ['client'])
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeClientKey);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
     _.each(result.error, (error) => {
@@ -86,21 +101,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should fail if config.[production, test, development].database.client is not a MySQL compatible database client', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function incompatibleDatabaseClient(env, environment, index) {
+      environment[index]['database']['client'] = 'pg';
+      return environment;
+    }
 
-    // Loop through each environment mutating the database.client
-    _.each(configClone, (env, index, list) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['client'] = 'pg';
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, incompatibleDatabaseClient);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -117,20 +124,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should fail if config.[production, test, development].database.connection does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabaseClient(env, environment, index) {
+      environment[index]['database'] = _.omit(env.database, ['connection']);
+      return environment;
+    }
 
-    // Loop through each environment removing database.connection
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database'] = _.omit(db, ['connection'])
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseClient);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -147,22 +147,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should fail if config.[production, test, development].database.connection.host does not exist', () => {
-    // Deep clone config
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabaseConnectionHost(env, environment, index) {
+      environment[index]['database']['connection'] = _.omit(env.database.connection, ['host']);
+      return environment;
+    }
 
-    // Loop through each environment removing database.connection.host
-    _.each(configClone, (env, index, list) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['connection'] = _.omit(db.connection, ['host']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseConnectionHost);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -179,22 +170,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should pass if config.[production, test, development].database.connection.port does not exist', () => {
-    // Deep clone config
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabaseConnectionPort(env, environment, index) {
+      environment[index]['database']['connection'] = _.omit(env.database.connection, ['port']);
+      return environment;
+    }
 
-    // Loop through each environment removing database.connection.port
-    _.each(configClone, (env, index, list) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['connection'] = _.omit(db.connection, ['port']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseConnectionPort);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
@@ -202,21 +184,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should fail if config.[production, test, development].database.connection.port is not a string', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function incompatiblePrimativePort(env, environment, index) {
+      environment[index]['database']['connection']['port'] = 3306;
+      return environment;
+    }
 
-    // Loop through each environment mutating database.connection.port
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['connection']['port'] = 3306;
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, incompatiblePrimativePort);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -233,21 +207,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should fail if config.[production, test, development].datbase.connection.user does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabaseConnectionUser(env, environment, index) {
+      environment[index]['database']['connection'] = _.omit(env.database.connection, ['user']);
+      return environment;
+    }
 
-    // Loop through each environment mutating database.connection.user
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['connection'] = _.omit(db.connection, ['user']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseConnectionUser);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -264,21 +230,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should fail if config.[production, test, development].database.connection.password does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabaseConnectionPassword(env, environment, index) {
+      environment[index]['database']['connection'] = _.omit(env.database.connection, ['password']);
+      return environment;
+    }
 
-    // Loop through each environment mutating database.connection.password
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['connection'] = _.omit(db.connection, ['password']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseConnectionPassword);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -295,21 +253,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should fail if config.[production, test, development].database.connection.password is not a string', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function incompatiblePrimativePassword(env, environment, index) {
+      environment[index]['database']['connection']['password'] = 4444;
+      return environment;
+    }
 
-    // Loop through each environment mutating database.connection.password
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['connection']['password'] = 4444;
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, incompatiblePrimativePassword);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -326,21 +276,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should fail if config.[production, test, development].database.connection.database does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabaseConnectionDatabase(env, environment, index) {
+      environment[index]['database']['connection'] = _.omit(env.database.connection, ['database']);
+      return environment;
+    }
 
-    // Loop through each environment mutating database.connection.database
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['connection'] = _.omit(db.connection, ['database']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseConnectionDatabase);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -357,21 +299,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should pass if config.[production, test, development].database.pool does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabasePool(env, environment, index) {
+      environment[index]['database'] = _.omit(env.database, ['pool']);
+      return environment;
+    }
 
-    // Loop through each environment mutating database.pool
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database'] = _.omit(db, ['pool']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabasePool);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
@@ -379,21 +313,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should pass if config.[production, test, development].database.pool.min does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabasePoolMin(env, environment, index) {
+      environment[index]['database']['pool'] = _.omit(env.database.pool, ['min']);
+      return environment;
+    }
 
-    // Loop through each environment mutating database.pool.min
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['pool'] = _.omit(db, ['min']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabasePoolMin);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
@@ -401,35 +327,34 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should pass if config.[production, test, development].database.pool.max does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabasePoolMax(env, environment, index) {
+      environment[index]['database']['pool'] = _.omit(env.database.pool, ['max']);
+      return environment;
+    }
 
-    // Loop through each environment mutating database.pool.max
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['pool'] = _.omit(db, ['max']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabasePoolMax);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
 
 
 
-  // Only testing production because test/development do not have a database.pool entry
-  it('should fail if config.production.database.pool.min and/or config.production.database.pool.max is not a number', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
+  it('should fail if config.[production, test, development]..pool.min and/or config.[production, test, development]..pool.max is not a number', () => {
+    function incompatibleDatabasePoolMinMaxType(env, environment, index) {
+      if (environment[index]['database']['pool'] !== undefined) {
+        environment[index]['database']['pool']['min'] = '2';
+      }
 
-    configClone['production']['database']['pool']['min'] = '2';
-    configClone['production']['database']['pool']['max'] = '10';
+      if (environment[index]['database']['pool'] !== undefined) {
+        environment[index]['database']['pool']['max'] = '10';
+      }
 
-    const result = validateConfig(configClone);
+      return environment;
+    }
+
+    const test = createTestCase(args, incompatibleDatabasePoolMinMaxType);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -445,21 +370,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should pass if config.[production, test, development].database.migrations does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabaseMigrations(env, environment, index) {
+      environment[index]['database'] = _.omit(env.database, ['migrations']);
+      return environment;
+    }
 
-    // Loop through each environment removing database.migrations
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database'] = _.omit(db, ['migrations']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseMigrations);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
@@ -467,34 +384,30 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should pass if config.[production, test, development].database.migrations.tableName does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabaseMigrationsTableName(env, environment, index) {
+      environment[index]['database']['migrations'] = _.omit(env.database.migrations, ['tableName']);
+      return environment;
+    }
 
-    // Loop through each environment removing database.migrations.tableName
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['migrations'] = _.omit(db.migrations, ['tableName']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseMigrationsTableName);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
 
 
 
-  // Only testing production because test/development do not have a database.migrations entry
-  it('should fail if config.production.database.migrations.tableName is not a string', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
+  it('should fail if config.[production, test, development].database.migrations.tableName is not a string', () => {
+    function incompatibleDatabaseMigrationsTableName(env, environment, index) {
+      if (environment[index]['database']['migrations'] !== undefined) {
+        environment[index]['database']['migrations']['tableName'] = ['test'];
+      }
 
-    configClone.production.database.migrations.tableName = ['test'];
+      return environment;
+    }
 
-    const result = validateConfig(configClone);
+    const test = createTestCase(args, incompatibleDatabaseMigrationsTableName);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -507,34 +420,30 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should pass if config.[production, test, development].database.migrations.directory does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabaseMigrationsDirectory(env, environment, index) {
+      environment[index]['database']['migrations'] = _.omit(env.database.migrations, ['directory']);
+      return environment;
+    }
 
-    // Loop through each environment removing database.migrations.directory
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['migrations'] = _.omit(db.migrations, ['directory']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseMigrationsDirectory);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
 
 
 
-  // Only testing production because test/development do not have a database.migrations entry
-  it('should fail if config.production.database.migrations.directory is not a string', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
+  it('should fail if config.[production, test, development]..migrations.directory is not a string', () => {
+    function incompatibleDatabaseMigrationsDirectory(env, environment, index) {
+      if (environment[index]['database']['migrations'] !== undefined) {
+        environment[index]['database']['migrations']['directory'] = ['test'];
+      }
 
-    configClone.production.database.migrations.directory = ['test'];
+      return environment;
+    }
 
-    const result = validateConfig(configClone);
+    const test = createTestCase(args, incompatibleDatabaseMigrationsDirectory);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -547,34 +456,30 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should pass if config.[production, test, development].database.migrations.extension does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function incompatibleDatabaseMigrationsExtensions(env, environment, index) {
+      environment[index]['database']['migrations'] = _.omit(env.database.migrations, ['extension']);
+      return environment;
+    }
 
-    // Loop through each environment removing database.migrations.extension
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['migrations'] = _.omit(db.migrations, ['extension']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, incompatibleDatabaseMigrationsExtensions);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
 
 
 
-  // Only testing production because test/development do not have a database.migrations entry
-  it('should fail if config.production.database.migrations.extension is not a string', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
+  it('should fail if config.[production, test, development]..migrations.extension is not a string', () => {
+    function incompatibleDatabaseMigrationsExtension(env, environment, index) {
+      if (environment[index]['database']['migrations'] !== undefined) {
+        environment[index]['database']['migrations']['extension'] = ['test'];
+      }
 
-    configClone.production.database.migrations.extension = ['test'];
+      return environment;
+    }
 
-    const result = validateConfig(configClone);
+    const test = createTestCase(args, incompatibleDatabaseMigrationsExtension);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -587,34 +492,30 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should pass if config.[production, test, development].database.migrations.disableTransactions does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabaseMigrationsDisableTransactions(env, environment, index) {
+      environment[index]['database']['migrations'] = _.omit(env.database.migrations, ['disableTransactions']);
+      return environment;
+    }
 
-    // Loop through each environment removing database.migrations.disableTransactions
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['migrations'] = _.omit(db.migrations, ['disableTransactions']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseMigrationsDisableTransactions);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
 
 
 
-  // Only testing production because test/development do not have a database.migrations entry
-  it('should fail if config.production.database.migrations.disableTransactions is not a boolean', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
+  it('should fail if config.[production, test, development]..migrations.disableTransactions is not a boolean', () => {
+    function incompatibleDatabaseMigrationsDisableTransactions(env, environment, index) {
+      if (environment[index]['database']['migrations'] !== undefined) {
+        environment[index]['database']['migrations']['disableTransactions'] = 'false';
+      }
 
-    configClone.production.database.migrations.disableTransactions = 'false';
+      return environment;
+    }
 
-    const result = validateConfig(configClone);
+    const test = createTestCase(args, incompatibleDatabaseMigrationsDisableTransactions);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
     _.each(result.error, (error) => {
@@ -625,35 +526,31 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
 
-  it('should succeed if config.[production, test, development].database.seeds does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+  it('should pass if config.[production, test, development].database.seeds does not exist', () => {
+    function removeDatabaseSeeds(env, environment, index) {
+      environment[index]['database'] = _.omit(env.database, ['seeds']);
+      return environment;
+    }
 
-    // Loop through each environment removing database.seeds
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database'] = _.omit(db, ['seeds']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseSeeds);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
 
 
 
-  // Only testing production because test/development do not have a database.seeds entry
-  it('should fail if config.production.database.seeds is not an object', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
+  it('should fail if config.[production, test, development]..seeds is not an object', () => {
+    function incompatibleDatabaseSeeds(env, environment, index) {
+      if (environment[index]['database']['seeds'] !== undefined) {
+        environment[index]['database']['seeds'] = 'seeds';
+      }
 
-    configClone.production.database.seeds = 'false';
+      return environment;
+    }
 
-    const result = validateConfig(configClone);
+    const test = createTestCase(args, incompatibleDatabaseSeeds);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -666,21 +563,13 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should fail if config.[production, test, development].database.seeds.directory does not exist', () => {
-    const configClone = JSON.parse(JSON.stringify(config));
-    const testConfig = {};
+    function removeDatabaseSeedsDirectory(env, environment, index) {
+      environment[index]['database']['seeds'] = _.omit(env.database.seeds, ['directory']);
+      return environment;
+    }
 
-    // Loop through each environment removing database.seeds
-    _.each(configClone, (env, index) => {
-      const db = env.database;
-      const envObject = {};
-
-      envObject[index] = env;
-      envObject[index]['database']['seeds'] = _.omit(db.seeds, ['directory']);
-
-      _.extend(testConfig, envObject);
-    });
-
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseSeedsDirectory);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
@@ -696,436 +585,538 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
 
-  it('should fail if config does not contain websites key', () => {
-    const testConfig = _.omit(config, ['websites']);
-    const result = validateConfig(testConfig);
+  it('should fail if config.[production, test, development] does not contain websites key', () => {
+    function removeDatabaseSeedsDirectory(env, environment, index) {
+      environment[index] = _.omit(env, ['websites']);
+      return environment;
+    }
 
-    expect(result.valid).to.equal(false);
-    expect(result.error[0].property).to.equal('@.websites');
-    expect(result.error[0].message).to.equal('is missing and not optional');
-  });
-
-
-
-  it('should fail if websites[i].name does not exist', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        return _.omit(i, ['name'])
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+    const test = createTestCase(args, removeDatabaseSeedsDirectory);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
-    _.each(result.error, (error, index) => {
-      expect(error.property).to.equal('@.websites[' + index + '].name');
+    _.each(result.error, (error) => {
+      expect(error.property).to.be.oneOf([
+        '@.production.websites',
+        '@.test.websites',
+        '@.development.websites',
+      ]);
       expect(error.message).to.equal('is missing and not optional');
     });
   });
 
 
 
-  it('should fail if websites[i].name is not a string', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
+  it('should fail if config.[production, test, development].websites[i].name does not exist', () => {
+    function removeWebsiteName(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        return _.omit(i, ['name']);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, removeWebsiteName);
+    const result = validateConfig(test);
+    const props = [];
+
+    expect(result.valid).to.equal(false);
+
+    _.each(result.error, (error, index) => {
+      props.push('@.production.websites[' + index + '].name');
+      props.push('@.test.websites[' + index + '].name');
+      props.push('@.development.websites[' + index + '].name');
+
+      expect(error.property).to.be.oneOf(props);
+      expect(error.message).to.equal('is missing and not optional');
+    });
+  });
+
+
+
+  it('should fail if config.[production, test, development].websites[i].name is not a string', () => {
+    function incompatibleWebsiteName(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
         i.name = ['website'];
         return i;
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, incompatibleWebsiteName);
+    const result = validateConfig(test);
+    const props = [];
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error, index) => {
-      expect(error.property).to.equal('@.websites[' + index + '].name');
+      props.push('@.production.websites[' + index + '].name');
+      props.push('@.test.websites[' + index + '].name');
+      props.push('@.development.websites[' + index + '].name');
+
+      expect(error.property).to.be.oneOf(props);
       expect(error.message).to.equal('must be string, but is array');
     });
   });
 
 
 
-  it('should fail if websites[i].username does not exist', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        const web = _.omit(i, ['username']);
-        return web;
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+  it('should fail if config.[production, test, development].websites[i].username does not exist', () => {
+    function removeWebsiteUsername(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        return _.omit(i, ['username']);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, removeWebsiteUsername);
+    const result = validateConfig(test);
+    const props = [];
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error, index) => {
-      expect(error.property).to.equal('@.websites[' + index + '].username');
+      props.push('@.production.websites[' + index + '].username');
+      props.push('@.test.websites[' + index + '].username');
+      props.push('@.development.websites[' + index + '].username');
+
+      expect(error.property).to.be.oneOf(props);
       expect(error.message).to.equal('is missing and not optional');
     });
   });
 
 
 
-  it('should fail if websites[i].username is not a string', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        i.username = ['test'];
+  it('should fail if config.[production, test, development].websites[i].username is not a string', () => {
+    function incompatibleWebsiteUsername(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        i.username = ['username'];
         return i;
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, incompatibleWebsiteUsername);
+    const result = validateConfig(test);
+    const props = [];
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error, index) => {
-      expect(error.property).to.equal('@.websites[' + index + '].username');
+      props.push('@.production.websites[' + index + '].username');
+      props.push('@.test.websites[' + index + '].username');
+      props.push('@.development.websites[' + index + '].username');
+
+      expect(error.property).to.be.oneOf(props);
       expect(error.message).to.equal('must be string, but is array');
     });
   });
 
 
 
-  it('should fail if websites[i].password does not exist', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        return _.omit(i, ['password'])
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+  it('should fail if config.[production, test, development].websites[i].password does not exist', () => {
+    function removeWebsitePassword(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        return _.omit(i, ['password']);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, removeWebsitePassword);
+    const result = validateConfig(test);
+    const props = [];
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error, index) => {
-      expect(error.property).to.equal('@.websites[' + index + '].password');
+      props.push('@.production.websites[' + index + '].password');
+      props.push('@.test.websites[' + index + '].password');
+      props.push('@.development.websites[' + index + '].password');
+
+      expect(error.property).to.be.oneOf(props);
       expect(error.message).to.equal('is missing and not optional');
     });
   });
 
 
 
-  it('should fail if websites[i].password is not a string', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        i.password= ['test'];
+  it('should fail if config.[production, test, development].websites[i].password is not a string', () => {
+    function incompatibleWebsitePassword(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        i.password = ['password'];
         return i;
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, incompatibleWebsitePassword);
+    const result = validateConfig(test);
+    const props = [];
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error, index) => {
-      expect(error.property).to.equal('@.websites[' + index + '].password');
+      props.push('@.production.websites[' + index + '].password');
+      props.push('@.test.websites[' + index + '].password');
+      props.push('@.development.websites[' + index + '].password');
+
+      expect(error.property).to.be.oneOf(props);
       expect(error.message).to.equal('must be string, but is array');
     });
   });
 
 
 
-  it('should fail if websites[i].url does not exist', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        return _.omit(i, ['url'])
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+  it('should fail if config.[production, test, development].websites[i].url does not exist', () => {
+    function removeWebsiteUrl(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        return _.omit(i, ['url']);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, removeWebsiteUrl);
+    const result = validateConfig(test);
+    const props = [];
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error, index) => {
-      expect(error.property).to.equal('@.websites[' + index + '].url');
+      props.push('@.production.websites[' + index + '].url');
+      props.push('@.test.websites[' + index + '].url');
+      props.push('@.development.websites[' + index + '].url');
+
+      expect(error.property).to.be.oneOf(props);
       expect(error.message).to.equal('is missing and not optional');
     });
   });
 
 
 
-  it('should fail if websites[i].url is not a string', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        i.url = ['test'];
+  it('should fail if config.[production, test, development].websites[i].url is not a string', () => {
+    function incompatibleWebsiteUrl(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        i.url = ['url'];
         return i;
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, incompatibleWebsiteUrl);
+    const result = validateConfig(test);
+    const props = [];
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error, index) => {
-      expect(error.property).to.equal('@.websites[' + index + '].url');
+      props.push('@.production.websites[' + index + '].url');
+      props.push('@.test.websites[' + index + '].url');
+      props.push('@.development.websites[' + index + '].url');
+
+      expect(error.property).to.be.oneOf(props);
       expect(error.message).to.equal('must be string, but is array');
     });
   });
 
 
 
-  it('should pass if websites[i].xmlrpc does not exist', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        return _.omit(i, ['xmlrpc'])
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+  it('should pass if config.[production, test, development].websites[i].api_url does not exist', () => {
+    function removeWebsiteApiUrl(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        return _.omit(i, ['api_url']);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, removeWebsiteApiUrl);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
 
 
 
-  it('should fail if websites[i].xmlrpc is not a string', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        i.xmlrpc = ['test'];
+  it('should fail if config.[production, test, development].websites[i].api_url is not a string', () => {
+    function incompatibleWebsiteApiUrl(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        i.api_url = ['api_url'];
         return i;
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, incompatibleWebsiteApiUrl);
+    const result = validateConfig(test);
+    const props = [];
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error, index) => {
-      expect(error.property).to.equal('@.websites[' + index + '].xmlrpc');
+      props.push('@.production.websites[' + index + '].api_url');
+      props.push('@.test.websites[' + index + '].api_url');
+      props.push('@.development.websites[' + index + '].api_url');
+
+      expect(error.property).to.be.oneOf(props);
       expect(error.message).to.equal('must be string, but is array');
     });
   });
 
 
 
-  it('should pass if websites[i].languages does not exist', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        return _.omit(i, ['langauges'])
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+  it('should pass if config.[production, test, development].websites[i].languages does not exist', () => {
+    function removeWebsiteLanguages(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        return _.omit(i, ['languages']);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, removeWebsiteLanguages);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
 
 
 
-  it('should fail if websites[i].languages is not an array', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        i.languages = 'test';
+  it('should fail if config.[production, test, development].websites[i].languages is not an array', () => {
+    function incompatibleWebsiteLanguages(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        i.languages = 'en';
         return i;
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, incompatibleWebsiteLanguages);
+    const result = validateConfig(test);
+    const props = [];
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error, index) => {
-      expect(error.property).to.equal('@.websites[' + index + '].languages');
+      props.push('@.production.websites[' + index + '].languages');
+      props.push('@.test.websites[' + index + '].languages');
+      props.push('@.development.websites[' + index + '].languages');
+
+      expect(error.property).to.be.oneOf(props);
       expect(error.message).to.equal('must be array, but is string');
     });
   });
 
 
 
-  it('should pass if websites[i].update_frequency does not exist', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        return _.omit(i, ['update_frequency'])
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+  it('should pass if config.[production, test, development].websites[i].update_frequency does not exist', () => {
+    function removeWebsiteUpdateFreq(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        return _.omit(i, ['update_frequency']);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, removeWebsiteUpdateFreq);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
 
 
 
-  it('should fail if websites[i].update_frequency is not a string', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        i.update_frequency = ['test'];
+  it('should fail if config.[production, test, development].websites[i].update_frequency is not a number', () => {
+    function incompatibleWebsiteUpdateFreq(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        i.update_frequency = '30000';
         return i;
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, incompatibleWebsiteUpdateFreq);
+    const result = validateConfig(test);
+    const props = [];
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error, index) => {
-      expect(error.property).to.equal('@.websites[' + index + '].update_frequency');
-      expect(error.message).to.equal('must be string, but is array');
+      props.push('@.production.websites[' + index + '].update_frequency');
+      props.push('@.test.websites[' + index + '].update_frequency');
+      props.push('@.development.websites[' + index + '].update_frequency');
+
+      expect(error.property).to.be.oneOf(props);
+      expect(error.message).to.equal('must be number, but is string');
     });
   });
 
 
 
-  it('should pass if websites[i].post_types does not exist', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        return _.omit(i, ['post_types'])
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+  it('should pass if config.[production, test, development].websites[i].post_types does not exist', () => {
+    function removeWebsitePostTypes(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        return _.omit(i, ['post_types']);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, removeWebsitePostTypes);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(true);
   });
 
 
 
-  it('should fail if websites[i].post_types is not an array', () => {
-    // Deep clone websites from config.websites
-    const websites = JSON.parse(JSON.stringify(config.websites));
-    const testConfig = {
-      database: config.database,
-      websites: _.map(websites, (i) => {
-        i.post_types = 'test';
+  it('should fail if config.[production, test, development].websites[i].post_types is not an array', () => {
+    function incompatibleWebsitePostTypes(env, environment, index) {
+      environment[index]['websites'] = _.map(env.websites, (i) => {
+        i.post_types = 'post';
         return i;
-      }),
-      logging: config.logging
-    };
-    const result = validateConfig(testConfig);
+      });
+
+      return environment;
+    }
+
+    const test = createTestCase(args, incompatibleWebsitePostTypes);
+    const result = validateConfig(test);
+    const props = [];
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error, index) => {
-      expect(error.property).to.equal('@.websites[' + index + '].post_types');
+      props.push('@.production.websites[' + index + '].post_types');
+      props.push('@.test.websites[' + index + '].post_types');
+      props.push('@.development.websites[' + index + '].post_types');
+
+      expect(error.property).to.be.oneOf(props);
       expect(error.message).to.equal('must be array, but is string');
     });
   });
 
 
 
-  it('should fail if config does not contain logging key', () => {
-    const testConfig = _.omit(config, ['logging']);
-    const result = validateConfig(testConfig);
+  it('should fail if config.[production, test, development] does not contain logging key', () => {
+    function removeLoggingKey(env, environment, index) {
+      environment[index] = _.omit(env, ['logging']);
+      return environment;
+    }
+
+    const test = createTestCase(args, removeLoggingKey);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error) => {
-      expect(error.property).to.equal('@.logging');
+      expect(error.property).to.oneOf([
+        '@.production.logging',
+        '@.test.logging',
+        '@.development.logging',
+      ]);
       expect(error.message).to.equal('is missing and not optional');
     });
   });
 
-  it('should fail if logging.debug_file does not exist', () => {
-    const testConfig = {
-      database: config.database,
-      websites: config.websites,
-      logging: _.omit(config.logging, ['debug_file'])
-    };
-    const result = validateConfig(testConfig);
+
+
+  it('should fail if config.[production, test, development].logging.debug_file does not exist', () => {
+    function removeLoggingDebugFile(env, environment, index) {
+      environment[index]['logging'] = _.omit(env.logging, ['debug_file']);
+      return environment;
+    }
+
+    const test = createTestCase(args, removeLoggingDebugFile);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error) => {
-      expect(error.property).to.equal('@.logging.debug_file');
+      expect(error.property).to.be.oneOf([
+        '@.production.logging.debug_file',
+        '@.test.logging.debug_file',
+        '@.development.logging.debug_file'
+      ]);
       expect(error.message).to.equal('is missing and not optional');
     });
   });
 
-  it('should fail if logging.debug_file is not a string', () => {
-    const testConfig = {
-      database: config.database,
-      websites: config.websites,
-      logging: {
-        debug_file: ['test'],
-        error_file: config.logging.error_file
-      }
-    };
-    const result = validateConfig(testConfig);
+
+
+  it('should fail if config.[production, test, development].logging.debug_file is not a string', () => {
+    function incompatibleLoggingDebugFile(env, environment, index) {
+      environment[index]['logging']['debug_file'] = ['/path/to/file'];
+      return environment;
+    }
+
+    const test = createTestCase(args, incompatibleLoggingDebugFile);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error) => {
-      expect(error.property).to.equal('@.logging.debug_file');
+      expect(error.property).to.be.oneOf([
+        '@.production.logging.debug_file',
+        '@.test.logging.debug_file',
+        '@.development.logging.debug_file'
+      ]);
       expect(error.message).to.equal('must be string, but is array');
     });
   });
 
-  it('should fail if logging.error_file does not exist', () => {
-    const testConfig = {
-      database: config.database,
-      websites: config.websites,
-      logging: _.omit(config.logging, ['error_file'])
-    };
-    const result = validateConfig(testConfig);
+
+
+  it('should fail if config.[production, test, development].logging.error_file does not exist', () => {
+    function removeLoggingErrorFile(env, environment, index) {
+      environment[index]['logging'] = _.omit(env.logging, ['error_file']);
+      return environment;
+    }
+
+    const test = createTestCase(args, removeLoggingErrorFile);
+    const result = validateConfig(test);
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error) => {
-      expect(error.property).to.equal('@.logging.error_file');
+      expect(error.property).to.be.oneOf([
+        '@.production.logging.error_file',
+        '@.test.logging.error_file',
+        '@.development.logging.error_file'
+      ]);
       expect(error.message).to.equal('is missing and not optional');
     });
   });
 
-  it('should fail if logging.error_file is not a string', () => {
-    const testConfig = {
-      database: config.database,
-      websites: config.websites,
-      logging: {
-        debug_file: config.logging.debug_file,
-        error_file: ['test']
-      }
-    };
-    const result = validateConfig(testConfig);
+  it('should fail if config.[production, test, development].logging.error_file is not a string', () => {
+    function incompatibleLoggingErrorFile(env, environment, index) {
+      environment[index]['logging']['error_file'] = ['/path/to/file'];
+      return environment;
+    }
+
+    const test = createTestCase(args, incompatibleLoggingErrorFile);
+    const result = validateConfig(test);
+
+    expect(result.valid).to.equal(false);
 
     expect(result.valid).to.equal(false);
 
     _.each(result.error, (error) => {
-      expect(error.property).to.equal('@.logging.error_file');
+      expect(error.property).to.be.oneOf([
+        '@.production.logging.error_file',
+        '@.test.logging.error_file',
+        '@.development.logging.error_file'
+      ]);
       expect(error.message).to.equal('must be string, but is array');
     });
   });
@@ -1142,12 +1133,12 @@ describe('- Validate config.js constraints, a.k.a. "required fields" - ', () => 
 
 
   it('should throw an error if the config file is not valid', () => {
-    const testConfig = {
+    const test = {
       database: config.database,
       websites: config.websites
     };
     const logger = console
 
-    expect(() => logValidationErrors(testConfig, logger)).to.throw('@.logging is missing and not optional');
+    expect(() => logValidationErrors(test, logger)).to.throw('@ must have at least key "production" or "test" or "development"');
   });
 });

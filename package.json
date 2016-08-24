@@ -5,10 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --timeout 15000",
-    "watch": "nodemon -e js -x npm run test",
-    "knex:dev": "knex --knexfile 'lib/database/knexfile.js'",
-    "knex:test": "knex --knexfile 'lib/database/knexfile.js' --env 'test'",
-    "knex:prod": "knex --knexfile 'lib/database/knexfile.js' --env 'production'"
+    "watch": "nodemon -e js -x npm run test"
   },
   "author": "Office of Design, U.S. Department of State",
   "license": "MIT",
