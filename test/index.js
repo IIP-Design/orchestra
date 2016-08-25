@@ -1,6 +1,5 @@
 const common = require('./common');
 const knex = common.knex;
-const config = common.config;
 
 
 function getTest(name, path) {
@@ -40,6 +39,9 @@ describe('Migrations test runner', () => {
   getTest('Lesson Resource Join Table', './migrations/lesson_resource.js');
 });
 
+
+
+
 describe('Application Configuration and Setup', () => {
   // Rollback the DB before the next test block
   before(() => {
@@ -48,4 +50,11 @@ describe('Application Configuration and Setup', () => {
 
   getTest('Validate config.js file', './application/validate.js');
   getTest('Configuration', './application/configure.js');
+});
+
+
+
+
+describe('Fetching Data', () => {
+  getTest('Client Object', './application/client_object.js');
 });
