@@ -1,0 +1,94 @@
+const path = require('path');
+
+// Require NPM modules
+const _ = require('underscore');
+
+// Require from test/common.js
+const common = require(path.resolve('test/common'));
+const knex = common.knex;
+const expect = common.expect;
+const websites = common.config.websites;
+
+// Require code to test
+const clientConstructor = require(path.resolve('lib/application/clients/client.js'));
+const testConfig = require(path.resolve('docs/config-example.js')).test.websites[0];
+
+// Local global variables
+let keys = [
+  'url',
+  'apiUrl',
+  'getUsername',
+  'getPassword',
+  'getConnection',
+  'setConnection',
+  'getLastUpdated',
+  'setLastUpdated',
+  'getResources',
+  'update'
+];
+
+
+
+
+describe('- Create the client object with clientConstructor factory function -', () => {
+  it('should pass if it returns an object, clientConstructor', () => {
+    const client = clientConstructor(testConfig);
+    expect(_.isObject(client)).to.be.true;
+  });
+
+
+
+  it('should have all of the provided keys, clientConstructor', () => {
+    const client = clientConstructor(testConfig);
+    expect(client).to.have.all.keys(keys);
+  });
+
+
+
+  it('should return the __username property, client.getUsername',() => {
+    const client = clientConstructor(testConfig);
+    expect(client.getUsername()).to.equal('wp_username');
+  });
+
+
+
+  it('should return the __password property, client.getPassword', () => {
+    const client = clientConstructor(testConfig);
+    expect(client.getPassword()).to.equal('wp_password');
+  });
+
+
+
+  it('should return an error if setConnection param is not an object, client.setConnection', () => {
+    const client = clientConstructor(testConfig);
+    const connection = true;
+    expect(() => client.setConnection(connection)).to.throw(Error, /Connection must be an object/);
+  });
+
+
+  it('should get and set the __connection property, client.getConnection', () => {
+    const client = clientConstructor(testConfig);
+    const connection = {
+      test: () => 'hi'
+    };
+    client.setConnection(connection);
+    expect(client.getConnection()).to.eql(connection);
+  });
+
+
+
+  it('should get and set last updated, client.setLastUpdated/client.getLastUpdated', () => {
+    const client = clientConstructor(testConfig);
+    const now = Date.now();
+    expect(client.setLastUpdated()).to.be.closeTo(now, 10);
+    expect(client.getLastUpdated()).to.be.closeTo(now, 10);
+  })
+
+
+
+  it('should throw an error if the connection is not set, client.getResources', () => {
+    const client = clientConstructor(testConfig);
+    expect(() => client.getResources()).to.throw(Error, /Client connection is undefined/);
+  });
+});
+

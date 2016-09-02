@@ -1,4 +1,5 @@
-const common = require('../common');
+const path = require('path');
+const common = require(path.resolve('test/common'));
 const knex = common.knex;
 const expect = common.expect;
 

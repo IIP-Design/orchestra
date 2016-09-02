@@ -17,33 +17,41 @@ before(() => {
 });
 
 
-describe('Migrations test runner', () => {
-  getTest('Website', './migrations/website.js');
-  getTest('Category', './migrations/category.js');
-  getTest('Tag', './migrations/tag.js');
-  getTest('Language', './migrations/language.js');
-  getTest('Resource Type', './migrations/resource_type.js');
-  getTest('Resource', './migrations/resource.js');
-  getTest('Glossary Term', './migrations/glossary_term.js');
-  getTest('Media', './migrations/media.js');
-  getTest('Instructor', './migrations/instructor.js');
-  getTest('Lesson', './migrations/lesson.js');
-  getTest('Course', './migrations/course.js');
-  getTest('Quiz', './migrations/quiz.js');
-  getTest('Course Lesson Join Table', './migrations/course_lesson.js');
-  getTest('Course Category Join Table', './migrations/course_category.js');
-  getTest('Lesson Tag Join Table', './migrations/lesson_tag.js');
-  getTest('Lesson Media Join Table', './migrations/lesson_media.js');
-  getTest('Lesson Glossary Join Table', './migrations/lesson_glossary.js');
-  getTest('Lesson Instructor Join Table', './migrations/lesson_instructor.js');
-  getTest('Lesson Quiz Join Table', './migrations/lesson_quiz.js');
-  getTest('Lesson Resource Join Table', './migrations/lesson_resource.js');
+describe('Database: Migrations', () => {
+  getTest('Website', './database/migrations/website.js');
+  getTest('Category', './database/migrations/category.js');
+  getTest('Tag', './database/migrations/tag.js');
+  getTest('Language', './database/migrations/language.js');
+  getTest('Resource Type', './database/migrations/resource_type.js');
+  getTest('Resource', './database/migrations/resource.js');
+  getTest('Glossary Term', './database/migrations/glossary_term.js');
+  getTest('Media', './database/migrations/media.js');
+  getTest('Instructor', './database/migrations/instructor.js');
+  getTest('Lesson', './database/migrations/lesson.js');
+  getTest('Course', './database/migrations/course.js');
+  getTest('Quiz', './database/migrations/quiz.js');
+  getTest('Course Lesson Join Table', './database/migrations/course_lesson.js');
+  getTest('Course Category Join Table', './database/migrations/course_category.js');
+  getTest('Lesson Tag Join Table', './database/migrations/lesson_tag.js');
+  getTest('Lesson Media Join Table', './database/migrations/lesson_media.js');
+  getTest('Lesson Glossary Join Table', './database/migrations/lesson_glossary.js');
+  getTest('Lesson Instructor Join Table', './database/migrations/lesson_instructor.js');
+  getTest('Lesson Quiz Join Table', './database/migrations/lesson_quiz.js');
+  getTest('Lesson Resource Join Table', './database/migrations/lesson_resource.js');
 });
 
 
 
 
-describe('Application Configuration and Setup', () => {
+// @todo Add the logger tests
+describe('Application: Utility Functions', () => {
+  getTest('Logger', './utils/logging.js');
+});
+
+
+
+
+describe('Application: Configuration and Setup', () => {
   // Rollback the DB before the next test block
   before(() => {
     return knex.migrate.rollback();
@@ -51,11 +59,16 @@ describe('Application Configuration and Setup', () => {
 
   getTest('Validate config.js file', './application/validate.js');
   getTest('Configuration', './application/configure.js');
+
+  // @todo Add test for app.setup
+  getTest('Setup', './application/setup.js');
 });
 
 
 
 
-describe('Fetching Data', () => {
-  getTest('Client Object', './application/client_object.js');
+// @todo Finish these tests/scripts
+describe('Application: Client Connections', () => {
+  getTest('Client Object', './application/clients/client.js');
+  getTest('WP XMLRCP Client', './application/clients/wordpress/xmlrpc.js');
 });
