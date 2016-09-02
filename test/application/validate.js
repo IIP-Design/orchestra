@@ -1,10 +1,11 @@
+const path = require('path');
 const _ = require('underscore');
 const rewire = require('rewire');
-const constraints = require('../../lib/utils/validation');
-const config = require('../../docs/config-example');
-const common = require('../common');
+const constraints = require(path.resolve('lib/utils/validation.js'));
+const config = require(path.resolve('docs/config-example.js'));
+const common = require(path.resolve('test/common.js'));
 const expect = common.expect;
-const utilities = rewire('../../lib/utils/index');
+const utilities = rewire(path.resolve('lib/utils/index.js'));
 
 
 

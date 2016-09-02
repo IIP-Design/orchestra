@@ -1,13 +1,18 @@
+const path = require('path');
+
+// Require NPM modules
 const fs = require('fs');
 const rewire = require('rewire');
-const common = require('../common');
+
+// Require from test/common.js
+const common = require(path.resolve('test/common.js'));
 const knex = common.knex;
 const expect = common.expect;
 const config = common.config;
-const logger = require('../../lib/utils/logging')(config);
-const configure = require('../../lib/application/configure')(logger);
-const getConfig = require('../../lib/utils/index').getConfig;
 
+// Require code to test
+const configure = require(path.resolve('lib/application/configure.js'));
+const getConfig = require(path.resolve('lib/utils/index.js')).getConfig;
 
 // Get `migrations` directory filenames, return most current timestamp from filename
 function getCurrentMigration(path) {
