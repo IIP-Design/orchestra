@@ -123,24 +123,24 @@ describe('- Configure the client objects for interacting with WP - ', () => {
 
 
 describe('- Configure the production db -', () => {
-  it('should return the current migration version', () => {
+
+  // This test is a little messy, but it's the only way I've been able to figure out
+  // how to make sure the knex connection isn't destroyed prematurely because of async
+
+  it('should seed the database with lanaguage codes', () => {
     return Promise.all([
       getCurrentMigration('lib/database/migrations'),
       configure.database(config)
+        .then((result) => {
+          const query = knex('language').where({
+            title: 'English'
+          }).select('lang_code');
+
+          expect(query).to.eventually.eql([{ lang_code: 'en' }]);
+          return result;
+        })
     ])
     .then((result) => expect(result[0]).to.equal(result[1]));
-  });
-
-
-  it('should seed the database with lanaguage codes', () => {
-    return configure.database(config)
-      .then(() => {
-        const result = knex('language').where({
-          title: 'English'
-        }).select('lang_code');
-
-        expect(result).to.eventually.eql([{ lang_code: 'en' }]);
-      })
   });
 });
 

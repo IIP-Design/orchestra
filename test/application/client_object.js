@@ -7,9 +7,10 @@ const rewire = require('rewire');
 const common = require('../common');
 const knex = common.knex;
 const expect = common.expect;
-const config = common.config.websites;
+const websites = common.config.websites;
 const testConfig = require('../../docs/config-example').test.websites[0];
 const clients = rewire('../../lib/application/client');
+
 
 // Global variables
 let keys = [
@@ -31,14 +32,25 @@ let keys = [
 describe('- Extend the wordpress.Client object to add a custom fetchResources method -', () => {
   const getExtendedWpConnection = clients.__get__('getExtendedWpConnection');
 
-  it('should return a Wordpress connection instance', () => {
+  it('should return a Wordpress connection instance, WP', () => {
     const connection = getExtendedWpConnection(testConfig);
     expect(connection.constructor.name).to.equal('WP');
   });
 
 
 
-  it('should have a fetchResources method, connection.fetchResources', () => {
+  it('should include all the methods from wordpress.Client, WP.', () => {
+    const wpClient = wordpress.createClient(testConfig);
+    const wpClientMethods = _.functions(wpClient);
+    const connection = getExtendedWpConnection(testConfig);
+    const connectionMethods = _.functions(connection);
+    const diff = _.difference(connectionMethods, wpClientMethods);
+    expect(diff).to.eql(['constructor', 'fetchResources']);
+  });
+
+
+
+  it('should have a fetchResources method, WP.fetchResources', () => {
     const connection = getExtendedWpConnection(testConfig);
     const methods = _.functions(connection);
     expect(methods).to.contain('fetchResources');
@@ -46,16 +58,66 @@ describe('- Extend the wordpress.Client object to add a custom fetchResources me
 
 
 
-  it('should return a promise, connection.fetchResources', () => {
-    const connection = getExtendedWpConnection(testConfig);
+  it('should return a promise, WP.fetchResources', () => {
+    const connection = getExtendedWpConnection(websites[0]);
     expect(connection.fetchResources()).to.be.a('promise');
+  });
+
+
+
+  it('should return an array of WP posts, WP.fetchResources', () => {
+    const connection = getExtendedWpConnection(websites[0]);
+    return connection.fetchResources()
+      .then((result) => {
+        expect(result).to.be.a('array');
+        expect(result.length).to.be.above(0);
+      })
+  });
+
+
+
+  it('should accept empty filter/fields objects/arrays, repsectively, WP.fetchResources', () => {
+    const connection = getExtendedWpConnection(websites[0]);
+    return connection.fetchResources({}, [])
+      .then((result) => {
+        expect(result).to.be.a('array');
+        expect(result.length).to.be.above(0);
+      })
+  });
+
+
+
+  it('should fail if the fiilter argument is not an object or array, WP.fetchResources', () => {
+    const connection = getExtendedWpConnection(websites[0]);
+    expect(() => connection.fetchResources('hello world')).to.throw(Error);
+  });
+
+
+
+  it('should accept just a filter argument, WP.fetchResources', () => {
+    const connection = getExtendedWpConnection(websites[0]);
+    return connection.fetchResources({}, [])
+      .then((result) => {
+        expect(result).to.be.a('array');
+        expect(result.length).to.be.above(0);
+      })
+  });
+
+
+
+  it('should accept only a fields array, WP.fetchResources', () => {
+  });
+
+
+
+  it('should order posts by post_modified, WP.fetchResources', () => {
   });
 });
 
 
 
 
-describe('- Create the client object with clientConstructor factory function-', () => {
+describe('- Create the client object with clientConstructor factory function -', () => {
   const clientConstructor = clients.__get__('clientConstructor');
 
   it('should pass if it returns an object, clientConstructor', () => {
