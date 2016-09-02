@@ -2,7 +2,7 @@
 
 const path = require('path');
 const cli = require('commander');
-const getConfig = require(path.resolve('lib/utils/index.js')).getConfig;
+const getConfig = require(path.resolve('lib/utils/helpers.js')).getConfig;
 
 
 // Arguments passed via the command line

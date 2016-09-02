@@ -5,7 +5,7 @@ const constraints = require(path.resolve('lib/utils/validation.js'));
 const config = require(path.resolve('docs/config-example.js'));
 const common = require(path.resolve('test/common.js'));
 const expect = common.expect;
-const utilities = rewire(path.resolve('lib/utils/index.js'));
+const utilities = rewire(path.resolve('lib/utils/helpers.js'));
 
 
 

@@ -12,7 +12,7 @@ const config = common.config;
 
 // Require code to test
 const configure = require(path.resolve('lib/application/configure.js'));
-const getConfig = require(path.resolve('lib/utils/index.js')).getConfig;
+const getConfig = require(path.resolve('lib/utils/helpers.js')).getConfig;
 
 // Get `migrations` directory filenames, return most current timestamp from filename
 function getCurrentMigration(path) {
