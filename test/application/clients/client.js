@@ -16,10 +16,8 @@ const testConfig = require(path.resolve('docs/config-example.js')).test.websites
 // Local global variables
 let keys = [
   'url',
-  'apiUrl',
   'getUsername',
   'getPassword',
-  'getConnection',
   'setConnection',
   'getLastUpdated',
   'setLastUpdated',
@@ -31,6 +29,7 @@ let keys = [
 
 
 describe('- Create the client object with clientConstructor factory function -', () => {
+
   it('should pass if it returns an object, clientConstructor', () => {
     const client = clientConstructor(testConfig);
     expect(_.isObject(client)).to.be.true;
@@ -59,20 +58,34 @@ describe('- Create the client object with clientConstructor factory function -',
 
 
 
-  it('should return an error if setConnection param is not an object, client.setConnection', () => {
+  it('should throw an error if setConnection param is not an object, client.setConnection', () => {
     const client = clientConstructor(testConfig);
     const connection = true;
     expect(() => client.setConnection(connection)).to.throw(Error, /Connection must be an object/);
   });
 
 
-  it('should get and set the __connection property, client.getConnection', () => {
+
+  it('should throw an error if setConnection object does not have the required properties, client.setConnection', () => {
+    const client = clientConstructor(testConfig);
+    const connection = {}
+    expect(() => client.setConnection(connection)).to.throw(Error, /(Connection object is missing required properties)/);
+  });
+
+
+
+  it('should throw an error if the a __connection has already been set, client.setConnection', () => {
     const client = clientConstructor(testConfig);
     const connection = {
-      test: () => 'hi'
+      fetchResources: () => 'test'
     };
-    client.setConnection(connection);
-    expect(client.getConnection()).to.eql(connection);
+    const connection2 = {
+      fetchResources: () => 'test'
+    };
+    expect(() => {
+      client.setConnection(connection);
+      client.setConnection(connection2);
+    }).to.throw(Error, /Connection has already been set/);
   });
 
 
@@ -80,15 +93,33 @@ describe('- Create the client object with clientConstructor factory function -',
   it('should get and set last updated, client.setLastUpdated/client.getLastUpdated', () => {
     const client = clientConstructor(testConfig);
     const now = Date.now();
+    expect(client.getLastUpdated()).to.equal(undefined);
     expect(client.setLastUpdated()).to.be.closeTo(now, 10);
     expect(client.getLastUpdated()).to.be.closeTo(now, 10);
-  })
+  });
 
 
 
   it('should throw an error if the connection is not set, client.getResources', () => {
     const client = clientConstructor(testConfig);
     expect(() => client.getResources()).to.throw(Error, /Client connection is undefined/);
+  });
+
+
+
+  // @todo Finish!
+  it('should return a list of resources from the given connection, client.getResources', () => {
+    const client = clientConstructor(testConfig);
+    const connection = {
+      fetchResources: (filter, fields) => new Promise((resolve, reject) => {
+        fields = fields || [];
+        filter = filter || {};
+
+        let test = ['Fetched resources'];
+        resolve(test);
+      })
+    };
+    client.setConnection(connection);
   });
 });
 

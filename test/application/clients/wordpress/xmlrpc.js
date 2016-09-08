@@ -18,10 +18,8 @@ const wpxmlrpc = rewire(path.resolve('lib/application/clients/wordpress/xmlrpc.j
 // Local global variables
 let keys = [
   'url',
-  'apiUrl',
   'getUsername',
   'getPassword',
-  'getConnection',
   'setConnection',
   'getLastUpdated',
   'setLastUpdated',
@@ -136,9 +134,7 @@ describe('- Create the client object with wpXmlrpcClientConstructor -', () => {
   const wpXmlrpcClientConstructor = wpxmlrpc.__get__('wpXmlrpcClientConstructor');
 
   it('should return client, with a WP connection', () => {
-    const client = wpXmlrpcClientConstructor(testConfig);
+    const client = wpXmlrpcClientConstructor(websites[0]);
     expect(client).to.have.all.keys(keys);
-    expect(client.getConnection()).to.be.an.instanceof(wordpress.Client);
-    expect(client.getConnection()).to.have.property('getPosts');
   });
 });
