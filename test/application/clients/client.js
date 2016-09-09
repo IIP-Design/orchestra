@@ -107,19 +107,41 @@ describe('- Create the client object with clientConstructor factory function -',
 
 
 
-  // @todo Finish!
-  it('should return a list of resources from the given connection, client.getResources', () => {
+  it('should always return a promise, regardless of whether or not connection.fetchResources is a promise, client.getResources', () => {
     const client = clientConstructor(testConfig);
+    const resources = ['Fetched resources'];
+    const connection = {
+      fetchResources: (filter, fields) => {
+        fields = fields || [];
+        filter = filter || {};
+
+        return resources;
+      }
+    };
+    client.setConnection(connection);
+    expect(client.getResources()).to.be.a('promise');
+  });
+
+
+
+  it('should return a list of resources from the given connection and set last updated, client.getResources', () => {
+    const client = clientConstructor(testConfig);
+    const resources = ['Fetched resources'];
     const connection = {
       fetchResources: (filter, fields) => new Promise((resolve, reject) => {
         fields = fields || [];
         filter = filter || {};
 
-        let test = ['Fetched resources'];
-        resolve(test);
+        resolve(resources);
       })
     };
     client.setConnection(connection);
+    return client.getResources().then((results) => {
+      let now = Date.now();
+      let lastUpdated = client.getLastUpdated();
+      expect(results).to.equal(resources);
+      expect(lastUpdated).to.be.closeTo(now, 10);
+    });
   });
 });
 
