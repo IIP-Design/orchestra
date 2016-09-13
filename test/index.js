@@ -67,8 +67,8 @@ describe('Application: Configuration and Setup', () => {
 
 
 
-// @todo Finish these tests/scripts
 describe('Application: Client Connections', () => {
+  // @todo finish the update method (either polling or observer patter)
   getTest('Client Object', './application/clients/client.js');
   getTest('WP XMLRCP Client', './application/clients/wordpress/xmlrpc.js');
 });

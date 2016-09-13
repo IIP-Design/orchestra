@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --timeout 15000",
-    "watch": "nodemon -e js -x npm run test"
+    "watch": "nodemon -e js -x npm run test",
+    "eslint" : "eslint ."
   },
   "author": "Office of Design, U.S. Department of State",
   "license": "MIT",

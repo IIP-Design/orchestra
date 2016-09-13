@@ -133,6 +133,14 @@ describe('- Extend the wordpress.Client object to add a custom fetchResources me
 describe('- Create the client object with wpXmlrpcClientConstructor -', () => {
   const wpXmlrpcClientConstructor = wpxmlrpc.__get__('wpXmlrpcClientConstructor');
 
+  it('should throw an error a config.website object is not passed, wpXmlrpcClientConstructor', () => {
+    expect(() => {
+      const client = wpXmlrpcClientConstructor()
+    }).to.throw(Error, /Missing config.website object/);
+  });
+
+
+
   it('should return client, with a WP connection', () => {
     const client = wpXmlrpcClientConstructor(websites[0]);
     expect(client).to.have.all.keys(keys);
